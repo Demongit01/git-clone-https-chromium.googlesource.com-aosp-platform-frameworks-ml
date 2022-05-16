@@ -65,9 +65,12 @@ std::pair<int, int> TileOneDimension(const Shape& input_shape, const T* in_data,
 }
 
 template <typename T>
-void tileImpl(const T* inputData, const Shape& inputShape, const int32_t* multiples, T* outputData,
+bool tileImpl(const T* inputData, const Shape& inputShape, const int32_t* multiples, T* outputData,
               const Shape& /*outputShape*/) {
+    int64_t overflowCheck = static_cast<int64_t>(inputShape.dimensions[0]) * static_cast<int64_t>(multiples[0]);
+    NN_CHECK((overflowCheck > INT_MIN) && (overflowCheck < INT_MAX));
     TileOneDimension(inputShape, inputData, multiples, outputData, 0);
+    return true;
 }
 
 }  // namespace
@@ -89,12 +92,11 @@ bool prepare(const Shape& input, const int32_t* multiples, const Shape& /*multip
 bool eval(const uint8_t* inputData, const Shape& inputShape, const int32_t* multiples,
           uint8_t* outputData, const Shape& outputShape) {
     NNTRACE_TRANS("tile::eval");
-#define ANDROID_NN_IMPL_TILE(operandType, dataType)                                   \
-    case operandType: {                                                               \
-        NNTRACE_COMP_SWITCH("tileImpl::" #dataType);                                  \
-        tileImpl(reinterpret_cast<const dataType*>(inputData), inputShape, multiples, \
-                 reinterpret_cast<dataType*>(outputData), outputShape);               \
-        return true;                                                                  \
+#define ANDROID_NN_IMPL_TILE(operandType, dataType)                                          \
+    case operandType: {                                                                      \
+        NNTRACE_COMP_SWITCH("tileImpl::" #dataType);                                         \
+        return tileImpl(reinterpret_cast<const dataType*>(inputData), inputShape, multiples, \
+                        reinterpret_cast<dataType*>(outputData), outputShape);               \
     }
 
     switch (inputShape.type) {
