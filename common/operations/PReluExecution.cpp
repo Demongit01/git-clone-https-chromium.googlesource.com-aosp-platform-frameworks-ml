@@ -76,6 +76,9 @@ bool evalQuant8(const T* aData, const Shape& aShape, const T* bData, const Shape
     int32_t output_multiplier_neg, output_shift_neg;
     tflite::QuantizeMultiplier(real_multiplier_pos, &output_multiplier_pos, &output_shift_pos);
     tflite::QuantizeMultiplier(real_multiplier_neg, &output_multiplier_neg, &output_shift_neg);
+    // We're shifting 32 bit values, so enforce a reasonable upper limit here.
+    NN_RET_CHECK(output_shift_pos <= 24);
+    NN_RET_CHECK(output_shift_neg <= 24);
     return eval<T>(
             [&](const T& val1, const T& val2) -> uint8_t {
                 const int32_t input = input_offset + static_cast<int32_t>(val1);
