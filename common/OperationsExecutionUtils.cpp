@@ -298,7 +298,7 @@ bool reshapePrepare(const Shape& input, const int32_t* targetDims, const int32_t
     int32_t numInputElements = (int32_t)getNumberOfElements(input);
 
     std::vector<uint32_t> outDims(targetDimsSize);
-    int32_t numOutputElements = 1;
+    int64_t numOutputElements = 1;
     int32_t strechDim = -1;
     for (int32_t i = 0; i < targetDimsSize; ++i) {
         int32_t value = targetDims[i];
@@ -306,6 +306,7 @@ bool reshapePrepare(const Shape& input, const int32_t* targetDims, const int32_t
             NN_OPS_CHECK(strechDim == -1);
             strechDim = i;
         } else {
+            NN_OPS_CHECK(value >= 0);
             numOutputElements *= value;
             outDims[i] = (uint32_t)value;
         }
