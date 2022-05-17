@@ -108,7 +108,10 @@ bool executeAbs(IOperationExecutionContext* context) {
 }
 
 bool executeRsqrt(IOperationExecutionContext* context) {
-    const std::function<float(float)> frsqrt = [](float x) { return 1.f / std::sqrt(x); };
+    const std::function<float(float)> frsqrt = [](float x) {
+        if(x > 0) return 1.f / std::sqrt(x);
+        return std::numeric_limits<float>::quiet_NaN();
+    };
     const auto tensorType = context->getInputType(kInputTensor);
     switch (tensorType) {
         case OperandType::TENSOR_FLOAT16:
