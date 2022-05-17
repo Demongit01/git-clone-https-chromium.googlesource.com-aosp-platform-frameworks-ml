@@ -1601,6 +1601,12 @@ int CpuExecutor::executeOperation([[maybe_unused]] const Operation& operation,
             const RunTimeOperandInfo& input = operands[ins[0]];
             const RunTimeOperandInfo& multiples = operands[ins[1]];
 
+            // Check that the multiples 8-bit buffer length is big enough for
+            // the expected number of 32 bit values.
+            if (multiples.length < (multiples.dimensions.size() * 4)) {
+                return ANEURALNETWORKS_BAD_DATA;
+            }
+
             RunTimeOperandInfo& output = operands[outs[0]];
             Shape outShape = output.shape();
 
