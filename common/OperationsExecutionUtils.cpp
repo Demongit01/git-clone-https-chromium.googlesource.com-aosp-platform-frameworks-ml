@@ -599,6 +599,7 @@ bool argMinMaxPrepare(const Shape& input, int32_t axis, Shape* output) {
 bool splitPrepare(const Shape& input, int32_t axis, int32_t numOutputs,
                   std::vector<Shape>* output) {
     NN_CHECK(handleNegativeAxis(input, &axis));
+    NN_CHECK(numOutputs > 0);
 
     const int32_t sizeOfAxisToSplit = input.dimensions[axis];
     NN_OPS_CHECK(sizeOfAxisToSplit % numOutputs == 0);
