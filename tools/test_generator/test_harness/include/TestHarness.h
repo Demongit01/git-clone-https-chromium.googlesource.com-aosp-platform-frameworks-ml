@@ -222,6 +222,7 @@ class TestBuffer {
             // The size for aligned_alloc must be an integral multiple of alignment.
             mBuffer.reset(aligned_alloc(kAlignment, alignedSize()), free);
             if (data) memcpy(mBuffer.get(), data, size);
+            else memset(mBuffer.get(), 0, size);
         }
     }
 
