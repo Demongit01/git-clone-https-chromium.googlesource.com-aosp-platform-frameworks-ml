@@ -308,9 +308,10 @@ inline std::enable_if_t<std::is_integral_v<T>, T> getUniform(T lower, T upper) {
         // is unsigned.
         std::uniform_int_distribution<int16_t> dis(lower, upper);
         return static_cast<T>(dis(RandomNumberGenerator::generator));
+    } else {
+        std::uniform_int_distribution<T> dis(lower, upper);
+        return dis(RandomNumberGenerator::generator);
     }
-    std::uniform_int_distribution<T> dis(lower, upper);
-    return dis(RandomNumberGenerator::generator);
 }
 template <typename T>
 inline std::enable_if_t<std::is_integral_v<T>, T> getUniformNonZero(T lower, T upper, T zeroPoint) {
