@@ -12,7 +12,7 @@
 #include <nnapi/hal/1.0/Device.h>
 #include <nnapi/hal/1.3/Device.h>
 
-#include <base/task_runner.h>
+#include <base/task/task_runner.h>
 
 #include "aosp/frameworks/ml/chromeos/mojo_driver/mojom/nnapi_hal.mojom.h"
 

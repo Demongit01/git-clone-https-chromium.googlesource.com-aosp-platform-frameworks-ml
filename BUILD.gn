@@ -178,6 +178,7 @@ static_library("runtime") {
     "dl",
   ]
   include_dirs = [
+    "chromeos/config",
     "common/types/include",
     "common/include",
     "driver/sample",
@@ -187,9 +188,9 @@ static_library("runtime") {
   sources = [
     "chromeos/compilation_caching.cpp",
     "chromeos/daemon_store.cpp",
-    "chromeos/driver_loader.cpp",
-    "chromeos/driver_loader_utils.cpp",
-    "chromeos/chromeos_config_portal.cpp",
+    "chromeos/driver_loader/driver_loader.cpp",
+    "chromeos/driver_loader/driver_loader_utils.cpp",
+    "chromeos/config/chromeos_config_portal.cpp",
     "runtime/BurstBuilder.cpp",
     "runtime/CompilationBuilder.cpp",
     "runtime/ExecutionBuilder.cpp",
@@ -532,6 +533,13 @@ shared_library("vendor-nn-hal") {
   ]
   deps = [
     ":full-driver",
+    ":nn-common",
+  ]
+  include_dirs = [
+    "chromeos/config",
+    "driver/sample",
+    "driver/sample_hidl",
+    "runtime/include",
   ]
   libs = [
     "pthread",
@@ -540,9 +548,10 @@ shared_library("vendor-nn-hal") {
     "textclassifier",  # For Farmhash.
   ]
   sources = [
-    "chromeos/sampledriver.cpp",
-    "chromeos/sampledriver_util.cpp",
-    "chromeos/chromeos_config_portal.cpp",
+    "chromeos/config/chromeos_config_portal.cpp",
+    "chromeos/driver_provider/sample_driver_provider.cpp",
+    "chromeos/driver_provider/sample_driver_provider_hidl.cpp",
+    "chromeos/driver_provider/sample_driver_provider_util.cpp",
   ]
   pkg_deps = [ "libcros_config" ]
 }
@@ -881,6 +890,7 @@ if (use.test) {
   executable("chromeos_testrunner") {
     include_dirs = [
       "chromeos",
+      "chromeos/config",
       "common/random",
     ]
     configs += [

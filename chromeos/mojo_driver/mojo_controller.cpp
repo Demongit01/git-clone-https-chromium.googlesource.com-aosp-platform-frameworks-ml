@@ -13,6 +13,7 @@
 #include <mojo/public/cpp/bindings/self_owned_receiver.h>
 #include <mojo/public/cpp/system/invitation.h>
 #include <scoped_minijail.h>
+#include <signal.h>
 
 #include "nnapi_hal_impl.h"
 

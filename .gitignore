@@ -1,2 +1,3 @@
 # Clangd language server
 compile_commands.json
+.cache

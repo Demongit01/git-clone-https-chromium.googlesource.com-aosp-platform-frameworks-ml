@@ -1,11 +1,11 @@
-// Copyright 2021 The Chromium OS Authors. All rights reserved.
+// Copyright 2021 The ChromiumOS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 #include <base/logging.h>
 #include <base/files/file_util.h>
 #include <base/files/file_path.h>
 #include <base/native_library.h>
-#include "sampledriver_util.h"
+#include "sample_driver_provider_util.h"
 
 bool ReadFileTo(std::string& filePath, std::string* content) {
     base::FilePath path(filePath);
