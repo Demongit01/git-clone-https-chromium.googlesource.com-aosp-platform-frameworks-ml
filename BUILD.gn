@@ -35,6 +35,7 @@ shared_library("libneuralnetworks") {
     "-Wno-unused-parameter",
   ]
   deps = [
+    ":ipc-nn-hal",
     ":nn-common",
     ":runtime",
     ":vendor-nn-hal",
@@ -140,6 +141,7 @@ pkg_config("disable_ndebug") {
 
 generate_mojom_bindings("nnapi-mojo-bindings-lib") {
   mojo_root = "${platform2_root}"
+  use_pic = true
   configs = [
     ":common_defaults",
   ]
@@ -556,6 +558,39 @@ shared_library("vendor-nn-hal") {
   pkg_deps = [ "libcros_config" ]
 }
 
+shared_library("ipc-nn-hal") {
+  configs += [
+    ":common_defaults",
+    ":target_defaults",
+    "//common-mk:visibility_default",
+  ]
+  cflags_cc = [
+    "-Wno-unused-parameter",
+  ]
+  deps = [
+    ":full-driver",
+    ":mojo-driver",
+    ":nn-common",
+  ]
+  include_dirs = [
+    "chromeos/config",
+    "chromeos/mojo_driver",
+    "driver/sample",
+    "driver/sample_hidl",
+    "runtime/include",
+  ]
+  libs = [
+    "pthread",
+    "rt",
+    "tensorflowlite",
+    "textclassifier",  # For Farmhash.
+  ]
+  sources = [
+    "chromeos/driver_provider/ipc_driver_provider.cpp",
+  ]
+  pkg_deps = [ "libcros_config" ]
+}
+
 shared_library("full-driver") {
   configs += [
     ":common_defaults",
@@ -632,6 +667,7 @@ executable("nnapi_worker") {
     ":full-driver", # TODO: Remove once dependency on SampleDriverFull is removed
     ":nn-common",
     ":nnapi-mojo-bindings-lib",
+    ":vendor-nn-hal",
   ]
   include_dirs = [
     "driver/sample_hidl",
@@ -771,6 +807,7 @@ if (use.test) {
     deps = [
       ":full-driver",
       ":generated_test_harness",
+      ":ipc-nn-hal",
       ":nn-common",
       ":nn_testrunner",
       ":runtime",
@@ -837,6 +874,7 @@ if (use.test) {
     ]
     deps = [
       ":generated_test_harness",
+      ":ipc-nn-hal",
       ":nn-common",
       ":nn_testrunner",
       ":runtime",
@@ -864,6 +902,7 @@ if (use.test) {
     deps = [
       ":nn-common",
       ":generated_test_harness",
+      ":ipc-nn-hal",
       ":nn_testrunner",
       ":runtime",
       ":vendor-nn-hal",
@@ -926,6 +965,7 @@ if (use.test) {
       "//common-mk:test",
     ]
     deps = [
+      ":ipc-nn-hal",
       ":nn-common",
       ":nn_testrunner",
       ":runtime",

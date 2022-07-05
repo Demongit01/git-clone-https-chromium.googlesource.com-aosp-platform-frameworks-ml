@@ -18,7 +18,7 @@ std::vector<SharedDevice> getDevices() {
 
   for (auto serviceName : serviceNames) {
     LOG(INFO) << "Loading service " << serviceName;
-    GeneralResult<SharedDevice> result = getService(serviceName);
+    GeneralResult<SharedDevice> result = android::nn::getService(serviceName);
     if (!result.has_value()) {
       LOG(ERROR) << "Failed to create Device (" << result.error().code
                  << "): " << result.error().message;

@@ -22,7 +22,8 @@ namespace nn {
 
 using namespace chromeos::nnapi;
 
-MojoController::MojoController() : ipc_thread_("IpcThread") {
+MojoController::MojoController(const char* service_name)
+    : service_name_(service_name), ipc_thread_("IpcThread") {
   ipc_thread_.StartWithOptions(
       ::base::Thread::Options(::base::MessagePumpType::IO, 0));
 
@@ -100,9 +101,10 @@ bool MojoController::SpawnWorkerProcessAndGetPid(
 
   std::string worker_path = "/usr/bin/nnapi_worker";
   std::string fd_argv = ::base::StringPrintf("%d", mojo_bootstrap_fd);
+  std::string service_name_argv = service_name_;
 #ifdef STRACE_NNAPI_HAL_IPC_DRIVER
-  // We use strace to create the log file to generate seccomp policy only for
-  // the nnapi_worker. When we use strace, we do not call
+  // We use strace to create the log file to generate seccomp policy only
+  // for the nnapi_worker. When we use strace, we do not call
   // minijail_use_seccomp_filter to use seccomp policy in minijail.
   LOG(INFO) << "Running strace on nnapi_worker...";
 
@@ -110,9 +112,10 @@ bool MojoController::SpawnWorkerProcessAndGetPid(
   std::string strace_arg_1 = "-f";
   std::string strace_arg_2 = "-o";
   std::string strace_arg_3 = "/tmp/nnapi_worker_strace.log";
-  char* argv[7] = {&strace_path[0],  &strace_arg_1[0], &strace_arg_2[0],
-                   &strace_arg_3[0], &worker_path[0],  &fd_argv[0],
-                   nullptr};
+  const char* argv[8] = {&strace_path[0],       &strace_arg_1[0],
+                         &strace_arg_2[0],      &strace_arg_3[0],
+                         &worker_path[0],       &fd_argv[0],
+                         &service_name_argv[0], nullptr};
 
   if (minijail_run_pid(jail.get(), &strace_path[0], argv, worker_pid) != 0) {
     LOG(FATAL) << "Failed to spawn worker process using minijail";
@@ -121,7 +124,8 @@ bool MojoController::SpawnWorkerProcessAndGetPid(
 #else
   std::string seccomp_policy_path =
       "/usr/share/policy/nnapi-hal-driver-seccomp.policy";
-  char* argv[3] = {&worker_path[0], &fd_argv[0], nullptr};
+  char* argv[4] = {&worker_path[0], &fd_argv[0], &service_name_argv[0],
+                   nullptr};
 
 #ifdef NNAPI_HAL_IPC_DRIVER_IN_CHROOT
   // Skip in order to conveniently run ipc driver in chroot during dev phase.

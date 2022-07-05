@@ -15,7 +15,6 @@
 #include <mojo/public/cpp/system/invitation.h>
 
 #include "nnapi_hal_impl.h"
-#include "sample_driver.h"
 
 using namespace android::nn;
 
@@ -23,7 +22,7 @@ using IDeviceReceiver = mojo::Receiver<chromeos::nnapi::mojom::IDevice>;
 
 namespace chromeos {
 
-void nnapi_worker_process(int mojo_bootstrap_fd) {
+void nnapi_worker_process(int mojo_bootstrap_fd, const char* service_name) {
   LOG(INFO) << "Worker started.";
 
   brillo::BaseMessageLoop message_loop;
@@ -39,7 +38,10 @@ void nnapi_worker_process(int mojo_bootstrap_fd) {
   mojo::ScopedMessagePipeHandle pipe =
       invitation.ExtractMessagePipe("mojo_driver");
 
-  IDeviceImpl idevice_impl(GetSampleDriver());
+  // Use hidl getService until we switch to canonical ipc driver
+  auto driver = V1_3::IDevice::getService(service_name);
+
+  IDeviceImpl idevice_impl(driver);
 
   std::unique_ptr<IDeviceReceiver> receiver;
 

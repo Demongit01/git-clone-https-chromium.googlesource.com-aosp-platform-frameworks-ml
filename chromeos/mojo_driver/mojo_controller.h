@@ -25,7 +25,7 @@ namespace nn {
 // done upon construction.
 class MojoController {
  public:
-  MojoController();
+  MojoController(const char* service_name = "default");
 
   hardware::Return<void> getCapabilities_1_3(
       V1_3::IDevice::getCapabilities_1_3_cb cb);
@@ -86,6 +86,7 @@ class MojoController {
 
   mojo::Remote<chromeos::nnapi::mojom::IDevice> remote_;
   std::unique_ptr<mojo::core::ScopedIPCSupport> ipc_support_;
+  const char* service_name_;
   ::base::Thread ipc_thread_;
 };
 

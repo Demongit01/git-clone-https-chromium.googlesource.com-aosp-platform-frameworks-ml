@@ -6,7 +6,7 @@
 #include "android-base/logging.h"
 
 namespace chromeos {
-void nnapi_worker_process(int);
+void nnapi_worker_process(int, const char*);
 }  // namespace chromeos
 
 int main(int argc, char** argv) {
@@ -17,8 +17,9 @@ int main(int argc, char** argv) {
   android::base::InitLogging(argv, android::base::StderrLogger);
   android::base::SetLogger(ChromeLogger);
 
-  CHECK_GE(argc, 1);
-  chromeos::nnapi_worker_process(atoi(argv[1]));
+  CHECK_GE(argc, 2);
+
+  chromeos::nnapi_worker_process(atoi(argv[1]), argv[2]);
 
   return 0;
 }

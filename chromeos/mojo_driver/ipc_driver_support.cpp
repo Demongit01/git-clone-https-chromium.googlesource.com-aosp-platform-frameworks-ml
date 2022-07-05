@@ -14,7 +14,7 @@
 
 extern "C" BRILLO_EXPORT void* get_driver() {
   auto driver =
-      new android::nn::IPCDriver("MojoDriver", android::nn::GetSampleDriver());
+      new android::nn::IPCDriver("default", android::nn::GetSampleDriver());
   return static_cast<void*>(driver);
 }
 

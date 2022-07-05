@@ -26,7 +26,7 @@ namespace nn {
 
 class IDeviceImpl : public chromeos::nnapi::mojom::IDevice {
  public:
-  IDeviceImpl(V1_3::IDevice* underlying_driver)
+  IDeviceImpl(sp<V1_3::IDevice> underlying_driver)
       : wrapped_driver_(underlying_driver) {}
 
  private:
@@ -87,7 +87,7 @@ class IDeviceImpl : public chromeos::nnapi::mojom::IDevice {
           pm_callback,
       prepareModelFromCache_1_3Callback callback) override;
 
-  V1_3::IDevice* wrapped_driver_;
+  sp<V1_3::IDevice> wrapped_driver_;
 };
 
 class IPreparedModelCallbackImpl

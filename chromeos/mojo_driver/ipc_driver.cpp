@@ -8,9 +8,9 @@
 namespace android {
 namespace nn {
 
-IPCDriver::IPCDriver(const char* name, sp<V1_3::IDevice> delegate)
+IPCDriver::IPCDriver(const char* service_name, sp<V1_3::IDevice> delegate)
     : delegate_(delegate) {
-  mojo_ = std::make_unique<MojoController>();
+  mojo_ = std::make_unique<MojoController>(service_name);
 }
 
 // *************** MOJO IPC ***************

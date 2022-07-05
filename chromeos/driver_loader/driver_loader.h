@@ -12,6 +12,11 @@ namespace nn {
 
 GeneralResult<SharedDevice> getService(const std::string& serviceName);
 
+namespace ipc {
+
+GeneralResult<SharedDevice> getService(const std::string& serviceName);
+
+}  // namespace ipc
 }  // namespace nn
 }  // namespace android
 
