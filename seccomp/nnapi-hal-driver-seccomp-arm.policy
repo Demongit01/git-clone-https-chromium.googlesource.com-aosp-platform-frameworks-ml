@@ -50,3 +50,4 @@ eventfd2: 1
 exit_group: 1
 restart_syscall: 1
 rt_sigreturn: 1
+msync: 1

@@ -6,6 +6,8 @@
 
 #include <mojo/public/cpp/bindings/self_owned_receiver.h>
 
+#include "handle_error.h"
+
 namespace android {
 namespace nn {
 
@@ -141,7 +143,9 @@ hardware::Return<V1_0::ErrorStatus> execute_base(
       ::base::BindOnce(fn, std::move(pending_receiver), std::move(callback)));
 
   auto remote = mojo::Remote<T_IPreparedModel>(std::move(pending_remote));
-  remote->execute(request, std::move(ec_remote), &error_status);
+  auto re = remote->execute(request, std::move(ec_remote), &error_status);
+  HANDLE_REMOTE_CALL_FAILURE(re, error_status,
+                             V1_0::ErrorStatus::DEVICE_UNAVAILABLE);
   pending_remote = remote.Unbind();
 
   return error_status;
@@ -170,7 +174,10 @@ hardware::Return<V1_0::ErrorStatus> execute_1_2_base(
       ::base::BindOnce(fn, std::move(pending_receiver), std::move(callback)));
 
   auto remote = mojo::Remote<T_IPreparedModel>(std::move(pending_remote));
-  remote->execute_1_2(request, measure, std::move(ec_remote), &error_status);
+  auto re = remote->execute_1_2(request, measure, std::move(ec_remote),
+                                &error_status);
+  HANDLE_REMOTE_CALL_FAILURE(re, error_status,
+                             V1_0::ErrorStatus::DEVICE_UNAVAILABLE);
   pending_remote = remote.Unbind();
 
   return error_status;
@@ -233,8 +240,10 @@ hardware::Return<V1_3::ErrorStatus> PreparedModel_1_3Stub::execute_1_3(
 
   auto remote =
       mojo::Remote<mojom::IPreparedModel_1_3>(std::move(pending_remote_));
-  remote->execute_1_3(request, measure, deadline, loopTimeoutDuration,
-                      std::move(ec_remote), &error_status);
+  auto re = remote->execute_1_3(request, measure, deadline, loopTimeoutDuration,
+                                std::move(ec_remote), &error_status);
+  HANDLE_REMOTE_CALL_FAILURE(re, error_status,
+                             V1_3::ErrorStatus::DEVICE_UNAVAILABLE);
   pending_remote_ = remote.Unbind();
 
   return error_status;
@@ -250,8 +259,9 @@ hardware::Return<void> executeSynchronously_base(
   V1_0::ErrorStatus status;
   std::vector<V1_2::OutputShape> outputShapes;
   V1_2::Timing timing;
-  remote->executeSynchronously(request, measure, &status, &outputShapes,
-                               &timing);
+  auto re = remote->executeSynchronously(request, measure, &status,
+                                         &outputShapes, &timing);
+  HANDLE_REMOTE_CALL_FAILURE(re, status, V1_0::ErrorStatus::DEVICE_UNAVAILABLE);
   cb(status, outputShapes, timing);
   pending_remote = remote.Unbind();
   return hardware::Void();
@@ -282,9 +292,10 @@ hardware::Return<void> PreparedModel_1_3Stub::executeSynchronously_1_3(
   V1_3::ErrorStatus status;
   std::vector<V1_2::OutputShape> outputShapes;
   V1_2::Timing timing;
-  remote->executeSynchronously_1_3(request, measure, deadline,
-                                   loopTimeoutDuration, &status, &outputShapes,
-                                   &timing);
+  auto re = remote->executeSynchronously_1_3(request, measure, deadline,
+                                             loopTimeoutDuration, &status,
+                                             &outputShapes, &timing);
+  HANDLE_REMOTE_CALL_FAILURE(re, status, V1_3::ErrorStatus::DEVICE_UNAVAILABLE);
   cb(status, outputShapes, timing);
   pending_remote_ = remote.Unbind();
   return hardware::Void();
@@ -416,9 +427,10 @@ hardware::Return<void> PreparedModel_1_3Stub::executeFenced(
   android::hardware::hidl_handle sync_fence;
   mojo::PendingRemote<chromeos::nnapi::mojom::IFencedExecutionCallback>
       fe_callback;
-  remote->executeFenced(request, waitFor, measure, deadline,
-                        loopTimeoutDuration, duration, &status, &sync_fence,
-                        &fe_callback);
+  auto re = remote->executeFenced(request, waitFor, measure, deadline,
+                                  loopTimeoutDuration, duration, &status,
+                                  &sync_fence, &fe_callback);
+  HANDLE_REMOTE_CALL_FAILURE(re, status, V1_3::ErrorStatus::DEVICE_UNAVAILABLE);
   sp<V1_3::IFencedExecutionCallback> wrapped_callback = nullptr;
   if (status == V1_3::ErrorStatus::NONE) {
     wrapped_callback = sp<V1_3::IFencedExecutionCallback>(
@@ -436,7 +448,8 @@ hardware::Return<void> FencedExecutionCallbackStub::getExecutionInfo(
   V1_3::ErrorStatus status;
   V1_2::Timing timingLaunched;
   V1_2::Timing timingFenced;
-  remote->getExecutionInfo(&status, &timingLaunched, &timingFenced);
+  auto re = remote->getExecutionInfo(&status, &timingLaunched, &timingFenced);
+  HANDLE_REMOTE_CALL_FAILURE(re, status, V1_3::ErrorStatus::DEVICE_UNAVAILABLE);
   cb(status, timingLaunched, timingFenced);
   pending_remote_ = remote.Unbind();
   return hardware::Void();

@@ -15,6 +15,7 @@
 #include <scoped_minijail.h>
 #include <signal.h>
 
+#include "handle_error.h"
 #include "nnapi_hal_impl.h"
 
 namespace android {
@@ -148,7 +149,8 @@ hardware::Return<void> MojoController::getCapabilities_1_3(
     V1_3::IDevice::getCapabilities_1_3_cb cb) {
   V1_3::Capabilities cap;
   V1_0::ErrorStatus status;
-  remote_->getCapabilities(&status, &cap);
+  auto re = remote_->getCapabilities(&status, &cap);
+  HANDLE_REMOTE_CALL_FAILURE(re, status, V1_0::ErrorStatus::DEVICE_UNAVAILABLE);
   cb(static_cast<V1_3::ErrorStatus>(status), cap);
   return hardware::Void();
 }
@@ -171,9 +173,10 @@ hardware::Return<V1_0::ErrorStatus> MojoController::prepareModel_1_1(
       FROM_HERE,
       ::base::BindOnce(fn, std::move(receiver), std::move(callback)));
 
-  remote_->prepareModel(model, preference, std::move(pmc_remote),
-                        &error_status);
-
+  auto re = remote_->prepareModel(model, preference, std::move(pmc_remote),
+                                  &error_status);
+  HANDLE_REMOTE_CALL_FAILURE(re, error_status,
+                             V1_0::ErrorStatus::DEVICE_UNAVAILABLE);
   return error_status;
 }
 
@@ -198,9 +201,11 @@ hardware::Return<V1_0::ErrorStatus> MojoController::prepareModel_1_2(
   ipc_thread_.task_runner()->PostTask(
       FROM_HERE,
       ::base::BindOnce(fn, std::move(receiver), std::move(callback)));
-  remote_->prepareModel_1_2(model, preference, modelCache, dataCache, token,
-                            std::move(pmc_remote), &error_status);
-
+  auto re =
+      remote_->prepareModel_1_2(model, preference, modelCache, dataCache, token,
+                                std::move(pmc_remote), &error_status);
+  HANDLE_REMOTE_CALL_FAILURE(re, error_status,
+                             V1_0::ErrorStatus::DEVICE_UNAVAILABLE);
   return error_status;
 }
 
@@ -228,8 +233,10 @@ hardware::Return<V1_3::ErrorStatus> MojoController::prepareModel_1_3(
       ::base::BindOnce(fn, std::move(receiver), std::move(callback)));
 
   V1_3::ErrorStatus status;
-  remote_->prepareModel_1_3(model, preference, priority, deadline, modelCache,
-                            dataCache, token, std::move(pmc_remote), &status);
+  auto re = remote_->prepareModel_1_3(model, preference, priority, deadline,
+                                      modelCache, dataCache, token,
+                                      std::move(pmc_remote), &status);
+  HANDLE_REMOTE_CALL_FAILURE(re, status, V1_3::ErrorStatus::DEVICE_UNAVAILABLE);
   return status;
 }
 
@@ -238,7 +245,8 @@ hardware::Return<void> MojoController::getSupportedOperations_1_1(
     V1_0::IDevice::getSupportedOperations_cb cb) {
   std::vector<bool> supported;
   V1_0::ErrorStatus status;
-  remote_->getSupportedOperations(model, &status, &supported);
+  auto re = remote_->getSupportedOperations(model, &status, &supported);
+  HANDLE_REMOTE_CALL_FAILURE(re, status, V1_0::ErrorStatus::DEVICE_UNAVAILABLE);
   cb(status, supported);
   return hardware::Void();
 }
@@ -248,7 +256,8 @@ hardware::Return<void> MojoController::getSupportedOperations_1_2(
     V1_2::IDevice::getSupportedOperations_1_2_cb cb) {
   std::vector<bool> supported;
   V1_0::ErrorStatus status;
-  remote_->getSupportedOperations_1_2(model, &status, &supported);
+  auto re = remote_->getSupportedOperations_1_2(model, &status, &supported);
+  HANDLE_REMOTE_CALL_FAILURE(re, status, V1_0::ErrorStatus::DEVICE_UNAVAILABLE);
   cb(status, supported);
   return hardware::Void();
 }
@@ -258,7 +267,8 @@ hardware::Return<void> MojoController::getSupportedOperations_1_3(
     V1_3::IDevice::getSupportedOperations_1_3_cb cb) {
   std::vector<bool> supported;
   V1_3::ErrorStatus status;
-  remote_->getSupportedOperations_1_3(model, &status, &supported);
+  auto re = remote_->getSupportedOperations_1_3(model, &status, &supported);
+  HANDLE_REMOTE_CALL_FAILURE(re, status, V1_3::ErrorStatus::DEVICE_UNAVAILABLE);
   cb(status, supported);
   return hardware::Void();
 }
@@ -267,21 +277,24 @@ hardware::Return<void> MojoController::getVersionString(
     V1_3::IDevice::getVersionString_cb cb) {
   std::string version;
   V1_0::ErrorStatus status;
-  remote_->getVersionString(&status, &version);
+  auto re = remote_->getVersionString(&status, &version);
+  HANDLE_REMOTE_CALL_FAILURE(re, status, V1_0::ErrorStatus::DEVICE_UNAVAILABLE);
   cb(status, version);
   return hardware::Void();
 }
 
 hardware::Return<V1_0::DeviceStatus> MojoController::getStatus() {
   V1_0::DeviceStatus device_status;
-  remote_->getStatus(&device_status);
+  auto re = remote_->getStatus(&device_status);
+  HANDLE_REMOTE_CALL_FAILURE(re, device_status, V1_0::DeviceStatus::OFFLINE);
   return device_status;
 }
 
 hardware::Return<void> MojoController::getType(V1_2::IDevice::getType_cb cb) {
   V1_2::DeviceType type;
   V1_0::ErrorStatus status;
-  remote_->getType(&status, &type);
+  auto re = remote_->getType(&status, &type);
+  HANDLE_REMOTE_CALL_FAILURE(re, status, V1_0::ErrorStatus::DEVICE_UNAVAILABLE);
   cb(static_cast<V1_0::ErrorStatus>(status), type);
   return hardware::Void();
 }
@@ -290,7 +303,8 @@ hardware::Return<void> MojoController::getSupportedExtensions(
     V1_2::IDevice::getSupportedExtensions_cb cb) {
   std::vector<V1_2::Extension> extension;
   V1_0::ErrorStatus status;
-  remote_->getSupportedExtensions(&status, &extension);
+  auto re = remote_->getSupportedExtensions(&status, &extension);
+  HANDLE_REMOTE_CALL_FAILURE(re, status, V1_0::ErrorStatus::DEVICE_UNAVAILABLE);
   cb(status, extension);
   return hardware::Void();
 }
@@ -300,7 +314,9 @@ hardware::Return<void> MojoController::getNumberOfCacheFilesNeeded(
   V1_0::ErrorStatus status;
   uint32_t numModelCache;
   uint32_t numDataCache;
-  remote_->getNumberOfCacheFilesNeeded(&status, &numModelCache, &numDataCache);
+  auto re = remote_->getNumberOfCacheFilesNeeded(&status, &numModelCache,
+                                             &numDataCache);
+  HANDLE_REMOTE_CALL_FAILURE(re, status, V1_0::ErrorStatus::DEVICE_UNAVAILABLE);
   cb(status, numModelCache, numDataCache);
   return hardware::Void();
 }
@@ -325,8 +341,9 @@ hardware::Return<V1_0::ErrorStatus> MojoController::prepareModelFromCache(
       ::base::BindOnce(fn, std::move(receiver), std::move(callback)));
 
   V1_0::ErrorStatus status;
-  remote_->prepareModelFromCache(modelCache, dataCache, token,
-                                 std::move(pmc_remote), &status);
+  auto re = remote_->prepareModelFromCache(modelCache, dataCache, token,
+                                       std::move(pmc_remote), &status);
+  HANDLE_REMOTE_CALL_FAILURE(re, status, V1_0::ErrorStatus::DEVICE_UNAVAILABLE);
   return status;
 }
 
@@ -351,8 +368,9 @@ hardware::Return<V1_3::ErrorStatus> MojoController::prepareModelFromCache_1_3(
       ::base::BindOnce(fn, std::move(receiver), std::move(callback)));
 
   V1_3::ErrorStatus status;
-  remote_->prepareModelFromCache_1_3(deadline, modelCache, dataCache, token,
-                                     std::move(pmc_remote), &status);
+  auto re = remote_->prepareModelFromCache_1_3(
+      deadline, modelCache, dataCache, token, std::move(pmc_remote), &status);
+  HANDLE_REMOTE_CALL_FAILURE(re, status, V1_3::ErrorStatus::DEVICE_UNAVAILABLE);
   return status;
 }
 
