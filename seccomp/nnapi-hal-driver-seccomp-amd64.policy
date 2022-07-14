@@ -5,6 +5,9 @@
 # This file lists the seccomp policy of allowed syscalls for
 # nnapi hal driver on AMD64.
 
+# rseq should be first due to frequency and purpose to decrease nptl latency
+rseq: 1
+
 gettid: 1
 sendto: 1
 epoll_wait: 1
