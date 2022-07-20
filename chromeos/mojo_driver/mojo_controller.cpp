@@ -5,8 +5,12 @@
 #include "mojo_controller.h"
 
 #include <base/logging.h>
+#include <base/no_destructor.h>
 #include <base/strings/stringprintf.h>
+#include <base/task/current_thread.h>
 #include <base/task/task_traits.h>
+#include <base/unguessable_token.h>
+#include <brillo/message_loops/base_message_loop.h>
 #include <libminijail.h>
 #include <mojo/core/embedder/embedder.h>
 #include <mojo/public/cpp/bindings/remote.h>
@@ -23,36 +27,73 @@ namespace nn {
 
 using namespace chromeos::nnapi;
 
-MojoController::MojoController(const char* service_name)
-    : service_name_(service_name), ipc_thread_("IpcThread") {
-  ipc_thread_.StartWithOptions(
-      ::base::Thread::Options(::base::MessagePumpType::IO, 0));
+class MojoThread {
+ public:
+  // This MojoThread should be used as singleton, the reason for this
+  // constructor being public is the base::NoDestructor<> needs a public
+  // constructor.
+  MojoThread();
 
+  MojoThread(MojoThread const&) = delete;
+  void operator=(MojoThread const&) = delete;
+
+  static MojoThread& Get();
+
+  scoped_refptr<::base::SingleThreadTaskRunner>& GetIpcTaskRunner();
+
+ private:
+  std::unique_ptr<::base::Thread> ipc_thread_;
+  std::unique_ptr<mojo::core::ScopedIPCSupport> ipc_support_;
+};
+
+MojoThread::MojoThread() {
   mojo::core::Init();
-
+  ipc_thread_ = std::make_unique<::base::Thread>("IpcThread");
+  ipc_thread_->StartWithOptions(
+      ::base::Thread::Options(::base::MessagePumpType::IO, 0));
   ipc_support_ = std::make_unique<mojo::core::ScopedIPCSupport>(
-      ipc_thread_.task_runner(),
+      ipc_thread_->task_runner(),
       mojo::core::ScopedIPCSupport::ShutdownPolicy::CLEAN);
+}
+
+scoped_refptr<::base::SingleThreadTaskRunner>& MojoThread::GetIpcTaskRunner() {
+  static auto task_runner = ipc_thread_->task_runner();
+  return task_runner;
+}
+
+// static
+MojoThread& MojoThread::Get() {
+  static ::base::NoDestructor<MojoThread> kMojoThread;
+  return *kMojoThread;
+}
+
+MojoController::MojoController(const char* service_name)
+    : service_name_(service_name) {
+  // We need to get task runner from MojoThread which also initializes mojo
+  // core, creates ipc thread, provides mojo ipc support, etc.
+  ipc_task_runner_ = MojoThread::Get().GetIpcTaskRunner();
 
   pid_t worker_pid;
   mojo::PlatformChannel channel;
-  if (!SpawnWorkerProcessAndGetPid(channel, &worker_pid)) {
+  // Use unique ids to differentiate mojo message pipe names if there are
+  // multiple ipc drivers
+  auto pipe_name = "mojo_driver_" + ::base::UnguessableToken{}.ToString();
+  if (!SpawnWorkerProcessAndGetPid(channel, pipe_name, &worker_pid)) {
     LOG(FATAL) << "Failed to spawn worker process";
   } else {
     LOG(INFO) << "Spawned worker process: " << worker_pid;
   }
-
-  MojoController::SendMojoInvitationAndGetRemote(worker_pid,
-                                                 std::move(channel));
+  MojoController::SendMojoInvitationAndGetRemote(worker_pid, std::move(channel),
+                                                 pipe_name);
 }
 
 void MojoController::SendMojoInvitationAndGetRemote(
     pid_t child_pid,
-    mojo::PlatformChannel channel) {
+    mojo::PlatformChannel channel,
+    std::string pipe_name) {
   // Send the Mojo invitation to the worker process.
   mojo::OutgoingInvitation invitation;
-  mojo::ScopedMessagePipeHandle pipe =
-      invitation.AttachMessagePipe("mojo_driver");
+  mojo::ScopedMessagePipeHandle pipe = invitation.AttachMessagePipe(pipe_name);
 
   remote_ = mojo::Remote<mojom::IDevice>(
       mojo::PendingRemote<mojom::IDevice>(std::move(pipe), 0u /* version */));
@@ -69,6 +110,7 @@ void MojoController::SendMojoInvitationAndGetRemote(
 
 bool MojoController::SpawnWorkerProcessAndGetPid(
     const mojo::PlatformChannel& channel,
+    std::string pipe_name,
     pid_t* worker_pid) {
   LOG(INFO) << "Starting to spawn nnapi worker process...";
   DCHECK(worker_pid != nullptr);
@@ -113,10 +155,10 @@ bool MojoController::SpawnWorkerProcessAndGetPid(
   std::string strace_arg_1 = "-f";
   std::string strace_arg_2 = "-o";
   std::string strace_arg_3 = "/tmp/nnapi_worker_strace.log";
-  const char* argv[8] = {&strace_path[0],       &strace_arg_1[0],
-                         &strace_arg_2[0],      &strace_arg_3[0],
-                         &worker_path[0],       &fd_argv[0],
-                         &service_name_argv[0], nullptr};
+  const char* argv[9] = {
+      &strace_path[0],       &strace_arg_1[0], &strace_arg_2[0],
+      &strace_arg_3[0],      &worker_path[0],  &fd_argv[0],
+      &service_name_argv[0], &pipe_name[0],    nullptr};
 
   if (minijail_run_pid(jail.get(), &strace_path[0], argv, worker_pid) != 0) {
     LOG(FATAL) << "Failed to spawn worker process using minijail";
@@ -125,8 +167,8 @@ bool MojoController::SpawnWorkerProcessAndGetPid(
 #else
   std::string seccomp_policy_path =
       "/usr/share/policy/nnapi-hal-driver-seccomp.policy";
-  char* argv[4] = {&worker_path[0], &fd_argv[0], &service_name_argv[0],
-                   nullptr};
+  char* argv[5] = {&worker_path[0], &fd_argv[0], &service_name_argv[0],
+                   &pipe_name[0], nullptr};
 
 #ifdef NNAPI_HAL_IPC_DRIVER_IN_CHROOT
   // Skip in order to conveniently run ipc driver in chroot during dev phase.
@@ -169,7 +211,7 @@ hardware::Return<V1_0::ErrorStatus> MojoController::prepareModel_1_1(
         std::make_unique<IPreparedModelCallbackImpl>(callback),
         std::move(receiver));
   };
-  ipc_thread_.task_runner()->PostTask(
+  ipc_task_runner_->PostTask(
       FROM_HERE,
       ::base::BindOnce(fn, std::move(receiver), std::move(callback)));
 
@@ -198,7 +240,7 @@ hardware::Return<V1_0::ErrorStatus> MojoController::prepareModel_1_2(
             std::make_unique<IPreparedModelCallback_1_2Impl>(callback),
             std::move(receiver));
       };
-  ipc_thread_.task_runner()->PostTask(
+  ipc_task_runner_->PostTask(
       FROM_HERE,
       ::base::BindOnce(fn, std::move(receiver), std::move(callback)));
   auto re =
@@ -228,7 +270,7 @@ hardware::Return<V1_3::ErrorStatus> MojoController::prepareModel_1_3(
             std::make_unique<IPreparedModelCallback_1_3Impl>(callback),
             std::move(receiver));
       };
-  ipc_thread_.task_runner()->PostTask(
+  ipc_task_runner_->PostTask(
       FROM_HERE,
       ::base::BindOnce(fn, std::move(receiver), std::move(callback)));
 
@@ -336,7 +378,7 @@ hardware::Return<V1_0::ErrorStatus> MojoController::prepareModelFromCache(
             std::make_unique<IPreparedModelCallback_1_2Impl>(callback),
             std::move(receiver));
       };
-  ipc_thread_.task_runner()->PostTask(
+  ipc_task_runner_->PostTask(
       FROM_HERE,
       ::base::BindOnce(fn, std::move(receiver), std::move(callback)));
 
@@ -363,7 +405,7 @@ hardware::Return<V1_3::ErrorStatus> MojoController::prepareModelFromCache_1_3(
             std::make_unique<IPreparedModelCallback_1_3Impl>(callback),
             std::move(receiver));
       };
-  ipc_thread_.task_runner()->PostTask(
+  ipc_task_runner_->PostTask(
       FROM_HERE,
       ::base::BindOnce(fn, std::move(receiver), std::move(callback)));
 

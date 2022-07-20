@@ -16,6 +16,8 @@
 namespace android {
 namespace nn {
 
+class MojoThread;
+
 // This class contains the Mojo implementations
 // of the V1_3::IDevice interface. Ideally we would fold
 // this into the IPCDriver class, but this isn't
@@ -80,14 +82,15 @@ class MojoController {
 
  private:
   void SendMojoInvitationAndGetRemote(pid_t child_pid,
-                                      mojo::PlatformChannel channel);
+                                      mojo::PlatformChannel channel,
+                                      std::string pipe_name);
   bool SpawnWorkerProcessAndGetPid(const mojo::PlatformChannel& channel,
+                                   std::string pipe_name,
                                    pid_t* worker_pid);
 
   mojo::Remote<chromeos::nnapi::mojom::IDevice> remote_;
-  std::unique_ptr<mojo::core::ScopedIPCSupport> ipc_support_;
   const char* service_name_;
-  ::base::Thread ipc_thread_;
+  scoped_refptr<::base::SequencedTaskRunner> ipc_task_runner_;
 };
 
 }  // namespace nn

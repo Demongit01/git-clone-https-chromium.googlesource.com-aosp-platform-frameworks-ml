@@ -22,7 +22,9 @@ using IDeviceReceiver = mojo::Receiver<chromeos::nnapi::mojom::IDevice>;
 
 namespace chromeos {
 
-void nnapi_worker_process(int mojo_bootstrap_fd, const char* service_name) {
+void nnapi_worker_process(int mojo_bootstrap_fd,
+                          const char* service_name,
+                          const char* pipe_name) {
   LOG(INFO) << "Worker started.";
 
   brillo::BaseMessageLoop message_loop;
@@ -35,8 +37,7 @@ void nnapi_worker_process(int mojo_bootstrap_fd, const char* service_name) {
   mojo::IncomingInvitation invitation;
   invitation = mojo::IncomingInvitation::Accept(mojo::PlatformChannelEndpoint(
       mojo::PlatformHandle(base::ScopedFD(mojo_bootstrap_fd))));
-  mojo::ScopedMessagePipeHandle pipe =
-      invitation.ExtractMessagePipe("mojo_driver");
+  mojo::ScopedMessagePipeHandle pipe = invitation.ExtractMessagePipe(pipe_name);
 
   // Use hidl getService until we switch to canonical ipc driver
   auto driver = V1_3::IDevice::getService(service_name);
