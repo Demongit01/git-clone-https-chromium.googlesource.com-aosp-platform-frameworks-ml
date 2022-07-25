@@ -586,6 +586,7 @@ shared_library("ipc-nn-hal") {
     "textclassifier",  # For Farmhash.
   ]
   sources = [
+    "chromeos/config/chromeos_config_portal.cpp",
     "chromeos/driver_provider/ipc_driver_provider.cpp",
   ]
   pkg_deps = [ "libcros_config" ]

@@ -9,7 +9,8 @@
 
 #include "chromeos_config_portal.h"
 
-const constexpr char* nnapi_driver_config_field = "nnapi/drivers";
+const char kSandboxSuffix[] = "-sandbox";
+constexpr char nnapi_driver_config_field[] = "nnapi/drivers";
 
 std::vector<DriverConfig> getDriverConfigs(
     std::unique_ptr<brillo::CrosConfigInterface> cfg_portal) {

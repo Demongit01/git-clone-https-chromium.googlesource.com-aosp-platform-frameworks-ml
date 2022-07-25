@@ -7,12 +7,11 @@
 #include <Utils.h>
 
 #include "android-base/strings.h"
+#include "chromeos_config_portal.h"
 #include "driver_loader_utils.h"
 
 namespace android {
 namespace nn {
-
-static const std::string kSandboxSuffix = "-sandbox";
 
 std::vector<SharedDevice> getDevices() {
   std::vector<std::string> serviceNames = getServiceNames();
@@ -24,7 +23,7 @@ std::vector<SharedDevice> getDevices() {
     GeneralResult<SharedDevice> result;
     if (base::EndsWith(serviceName, kSandboxSuffix)) {
       result = android::nn::ipc::getService(
-          serviceName.substr(0, serviceName.size() - kSandboxSuffix.size()));
+          serviceName.substr(0, serviceName.size() - strlen(kSandboxSuffix)));
     } else {
       result = android::nn::getService(serviceName);
     }

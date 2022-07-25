@@ -17,4 +17,6 @@ struct DriverConfig {
 std::vector<DriverConfig> getDriverConfigs(
     std::unique_ptr<brillo::CrosConfigInterface> cfg_portal);
 
+extern const char kSandboxSuffix[];
+
 #endif  // ML_NN_CHROMEOS_CHROMEOS_CONFIG_PORTAL_H_

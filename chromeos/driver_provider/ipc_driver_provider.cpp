@@ -9,6 +9,7 @@
 #include <nnapi/hal/1.3/Device.h>
 
 #include "SampleDriverFull.h"
+#include "chromeos_config_portal.h"
 #include "ipc_driver.h"
 
 namespace android {
@@ -20,8 +21,8 @@ GeneralResult<SharedDevice> getService(const std::string& serviceName) {
   auto tempDriver = new android::nn::sample_driver::SampleDriverFull(
       "ChromeSampleDriverFull", {.execTime = .9f, .powerUsage = .9f});
   auto driver = new android::nn::IPCDriver(serviceName.c_str(), tempDriver);
-  GeneralResult<SharedDevice> result =
-      V1_3::utils::Device::create(serviceName, std::move(driver));
+  GeneralResult<SharedDevice> result = V1_3::utils::Device::create(
+      serviceName + kSandboxSuffix, std::move(driver));
   return result;
 }
 
