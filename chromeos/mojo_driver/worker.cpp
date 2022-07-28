@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 #include <base/logging.h>
-#include <base/task/post_task.h>
 #include <base/threading/thread.h>
 
 #include <brillo/message_loops/base_message_loop.h>

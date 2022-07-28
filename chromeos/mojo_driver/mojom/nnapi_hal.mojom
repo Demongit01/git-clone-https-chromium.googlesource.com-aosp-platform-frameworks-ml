@@ -78,7 +78,7 @@ enum OperandLifeTime {
   NO_VALUE,
 };
 
-[Stable] enum DeviceStatus {
+[Extensible, Stable] enum DeviceStatus {
   AVAILABLE,
   BUSY,
   OFFLINE,
@@ -156,7 +156,7 @@ struct Request {
   array<HidlMemory> pools;
 };
 
-[Stable] enum ErrorStatus {
+[Extensible, Stable] enum ErrorStatus {
   NONE,
   DEVICE_UNAVAILABLE,
   GENERAL_FAILURE,
@@ -376,7 +376,7 @@ struct Model_1_2 {
   array<ExtensionNameAndPrefix> extensionNameToPrefix;
 };
 
-[Stable] enum MeasureTiming {
+[Extensible, Stable] enum MeasureTiming {
   NO = 0,
   YES = 1,
 };
@@ -403,7 +403,7 @@ interface IPreparedModelCallback_1_2 {
 
 // V1_3
 
-[Stable] enum ErrorStatus_1_3 {
+[Extensible, Stable] enum ErrorStatus_1_3 {
   NONE,
   DEVICE_UNAVAILABLE,
   GENERAL_FAILURE,

@@ -746,17 +746,17 @@ struct UnionTraits<chromeos::nnapi::mojom::ExtraParams::DataView,
                    android::nn::V1_2::Operand::ExtraParams* out) {
     bool result = true;
     switch (data.tag()) {
-      case chromeos::nnapi::mojom::ExtraParams::Tag::NONE:
+      case chromeos::nnapi::mojom::ExtraParams::Tag::kNone:
         out->none(android::hidl::safe_union::V1_0::Monostate());
         break;
-      case chromeos::nnapi::mojom::ExtraParams::Tag::CHANNELQUANT: {
+      case chromeos::nnapi::mojom::ExtraParams::Tag::kChannelQuant: {
         android::hardware::neuralnetworks::V1_2::SymmPerChannelQuantParams
             params;
         result &= data.ReadChannelQuant(&params);
         out->channelQuant(std::move(params));
         break;
       }
-      case chromeos::nnapi::mojom::ExtraParams::Tag::EXTENSION: {
+      case chromeos::nnapi::mojom::ExtraParams::Tag::kExtension: {
         android::hardware::hidl_vec<uint8_t> extension;
         result &= data.ReadExtension(&extension);
         out->extension(std::move(extension));
@@ -1237,11 +1237,11 @@ struct UnionTraits<chromeos::nnapi::mojom::OptionalTimePoint::DataView,
   static bool Read(chromeos::nnapi::mojom::OptionalTimePoint::DataView data,
                    android::nn::V1_3::OptionalTimePoint* out) {
     switch (data.tag()) {
-      case chromeos::nnapi::mojom::OptionalTimePoint::Tag::NONE:
+      case chromeos::nnapi::mojom::OptionalTimePoint::Tag::kNone:
         out->none(android::hidl::safe_union::V1_0::Monostate());
         break;
       case chromeos::nnapi::mojom::OptionalTimePoint::Tag::
-          NANOSECONDSSINCEEPOCH: {
+          kNanosecondsSinceEpoch: {
         out->nanosecondsSinceEpoch(data.nanosecondsSinceEpoch());
         break;
       }
@@ -1304,13 +1304,13 @@ struct UnionTraits<chromeos::nnapi::mojom::MemoryPool::DataView,
     bool result = true;
 
     switch (data.tag()) {
-      case chromeos::nnapi::mojom::MemoryPool::Tag::HIDLMEMORY: {
+      case chromeos::nnapi::mojom::MemoryPool::Tag::kHidlMemory: {
         android::hardware::hidl_memory hidl_memory;
         result &= data.ReadHidlMemory(&hidl_memory);
         out->hidlMemory(std::move(hidl_memory));
         break;
       }
-      case chromeos::nnapi::mojom::MemoryPool::Tag::TOKEN: {
+      case chromeos::nnapi::mojom::MemoryPool::Tag::kToken: {
         out->token(data.token());
         break;
       }
@@ -1343,10 +1343,10 @@ struct UnionTraits<chromeos::nnapi::mojom::OptionalTimeoutDuration::DataView,
       chromeos::nnapi::mojom::OptionalTimeoutDuration::DataView data,
       android::nn::V1_3::OptionalTimeoutDuration* out) {
     switch (data.tag()) {
-      case chromeos::nnapi::mojom::OptionalTimeoutDuration::Tag::NONE:
+      case chromeos::nnapi::mojom::OptionalTimeoutDuration::Tag::kNone:
         out->none(android::hidl::safe_union::V1_0::Monostate());
         break;
-      case chromeos::nnapi::mojom::OptionalTimeoutDuration::Tag::NANOSECONDS: {
+      case chromeos::nnapi::mojom::OptionalTimeoutDuration::Tag::kNanoseconds: {
         out->nanoseconds(data.nanoseconds());
         break;
       }
