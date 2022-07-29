@@ -2,15 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <Utils.h>
 #include <android-base/logging.h>
 #include <nnapi/IDevice.h>
 
-#include <Utils.h>
-#include <nnapi/hal/1.3/Device.h>
-
-#include "SampleDriverFull.h"
 #include "chromeos_config_portal.h"
-#include "ipc_driver.h"
+#include "driver_loader.h"
+#include "ipc_driver_canonical.h"
 
 namespace android {
 namespace nn {
@@ -18,12 +16,18 @@ namespace ipc {
 
 GeneralResult<SharedDevice> getService(const std::string& serviceName) {
   LOG(INFO) << "Creating " << serviceName << " mojo driver";
-  auto tempDriver = new android::nn::sample_driver::SampleDriverFull(
-      "ChromeSampleDriverFull", {.execTime = .9f, .powerUsage = .9f});
-  auto driver = new android::nn::IPCDriver(serviceName.c_str(), tempDriver);
-  GeneralResult<SharedDevice> result = V1_3::utils::Device::create(
-      serviceName + kSandboxSuffix, std::move(driver));
-  return result;
+
+  // This is the temporary local driver only used during development phase
+  // which will be replaced by remote driver later.
+  GeneralResult<SharedDevice> result = android::nn::getService(serviceName);
+  if (!result.has_value()) {
+    LOG(ERROR) << "Failed to create Device (" << result.error().code
+               << "): " << result.error().message;
+    return result;
+  }
+  auto ipcDriver = new android::nn::IPCDriverCanonical(
+      serviceName + kSandboxSuffix, std::move(result).value());
+  return GeneralResult<SharedDevice>{ipcDriver};
 }
 
 }  // namespace ipc

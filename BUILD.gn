@@ -569,12 +569,15 @@ shared_library("ipc-nn-hal") {
   ]
   deps = [
     ":full-driver",
-    ":mojo-driver",
+    #":mojo-driver",
+    ":mojo-driver-canonical",
     ":nn-common",
+    ":vendor-nn-hal",
   ]
   include_dirs = [
     "chromeos/config",
-    "chromeos/mojo_driver",
+    "chromeos/driver_loader",
+    "chromeos/mojo_driver_canonical",
     "driver/sample",
     "driver/sample_hidl",
     "runtime/include",
@@ -648,6 +651,32 @@ shared_library("mojo-driver") {
     "chromeos/mojo_driver/nnapi_hal_impl.cpp",
     "chromeos/mojo_driver/nnapi_stubs.cpp",
     "chromeos/mojo_driver/sample_driver.cpp",
+  ]
+  libs = [
+    "pthread",
+  ]
+}
+
+shared_library("mojo-driver-canonical") {
+  configs += [
+    ":common_defaults",
+    "//common-mk:visibility_default",
+  ]
+  cflags_cc = [
+    "-Wno-unused-parameter",
+    "-Wno-unused-lambda-capture",
+    "-Wno-unused-function"
+  ]
+  deps = [
+    ":full-driver", # TODO: Remove once dependency on SampleDriverFull is removed
+    ":nn-common",
+  ]
+  include_dirs = [
+    "driver/sample_hidl",
+    "runtime/include",
+  ]
+  sources = [
+    "chromeos/mojo_driver_canonical/ipc_driver_canonical.cpp",
   ]
   libs = [
     "pthread",
