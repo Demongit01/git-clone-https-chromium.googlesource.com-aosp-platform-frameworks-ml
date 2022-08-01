@@ -10,20 +10,25 @@
 namespace android {
 namespace nn {
 
+// We need to forward declare this since its header file
+// contains ChromeOS headers that contains macros that are
+// also defined in the Android ecosystem.
+class MojoControllerCanonical;
+
 class IPCDriverCanonical : public IDevice {
  public:
   IPCDriverCanonical(const std::string name, SharedDevice delegate);
 
   const std::string& getName() const override;
-  const std::string& getVersionString() const;
-  Version getFeatureLevel() const;
-  DeviceType getType() const;
-  const std::vector<Extension>& getSupportedExtensions() const;
-  const Capabilities& getCapabilities() const;
-  std::pair<uint32_t, uint32_t> getNumberOfCacheFilesNeeded() const;
-  GeneralResult<void> wait() const;
+  const std::string& getVersionString() const override;
+  Version getFeatureLevel() const override;
+  DeviceType getType() const override;
+  const std::vector<Extension>& getSupportedExtensions() const override;
+  const Capabilities& getCapabilities() const override;
+  std::pair<uint32_t, uint32_t> getNumberOfCacheFilesNeeded() const override;
+  GeneralResult<void> wait() const override;
   GeneralResult<std::vector<bool>> getSupportedOperations(
-      const Model& model) const;
+      const Model& model) const override;
   GeneralResult<SharedPreparedModel> prepareModel(
       const Model& model,
       ExecutionPreference preference,
@@ -34,21 +39,22 @@ class IPCDriverCanonical : public IDevice {
       const CacheToken& token,
       const std::vector<nn::TokenValuePair>& hints,
       const std::vector<nn::ExtensionNameAndPrefix>& extensionNameToPrefix)
-      const;
+      const override;
   GeneralResult<SharedPreparedModel> prepareModelFromCache(
       OptionalTimePoint deadline,
       const std::vector<SharedHandle>& modelCache,
       const std::vector<SharedHandle>& dataCache,
-      const CacheToken& token) const;
+      const CacheToken& token) const override;
   GeneralResult<SharedBuffer> allocate(
       const BufferDesc& desc,
       const std::vector<SharedPreparedModel>& preparedModels,
       const std::vector<BufferRole>& inputRoles,
-      const std::vector<BufferRole>& outputRoles) const;
+      const std::vector<BufferRole>& outputRoles) const override;
 
  private:
   const std::string name_;
   SharedDevice delegate_;
+  std::unique_ptr<MojoControllerCanonical> mojo_;
 };
 
 }  // namespace nn

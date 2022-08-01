@@ -164,6 +164,32 @@ generate_mojom_bindings("nnapi-mojo-bindings-lib") {
   ]
 }
 
+generate_mojom_bindings("nnapi-mojo-canonical-bindings-lib") {
+  mojo_root = "${platform2_root}"
+  use_pic = true
+  configs = [
+    ":common_defaults",
+  ]
+  cflags_cc = [
+    # Several of the libchrome headers that get pulled in require
+    # this warning to be squashed.
+    # e.g. base/scoped_generic.h (TrackAcquire)
+    "-Wno-unused-parameter",
+  ]
+  sources = [
+    "chromeos/mojo_driver_canonical/mojom/idevice.mojom",
+    "chromeos/mojo_driver_canonical/mojom/types.mojom",
+  ]
+  include_dirs = [
+    "chromeos/mojo_driver_canonical/mojom",
+    "common/include",
+  ]
+  mojo_extra_args = [
+    "--typemap",
+    rebase_path("chromeos/mojo_driver_canonical/mojom/type_mappings.json"),
+  ]
+}
+
 static_library("runtime") {
   configs += [
     ":common_defaults",
@@ -578,8 +604,6 @@ shared_library("ipc-nn-hal") {
     "chromeos/config",
     "chromeos/driver_loader",
     "chromeos/mojo_driver_canonical",
-    "driver/sample",
-    "driver/sample_hidl",
     "runtime/include",
   ]
   libs = [
@@ -668,15 +692,19 @@ shared_library("mojo-driver-canonical") {
     "-Wno-unused-function"
   ]
   deps = [
-    ":full-driver", # TODO: Remove once dependency on SampleDriverFull is removed
     ":nn-common",
+    ":nnapi_worker_canonical",
+    ":nnapi-mojo-canonical-bindings-lib",
+    ":vendor-nn-hal",
   ]
   include_dirs = [
-    "driver/sample_hidl",
     "runtime/include",
+    "chromeos",
+    "chromeos/driver_loader",
   ]
   sources = [
     "chromeos/mojo_driver_canonical/ipc_driver_canonical.cpp",
+    "chromeos/mojo_driver_canonical/mojo_controller_canonical.cpp",
   ]
   libs = [
     "pthread",
@@ -709,6 +737,37 @@ executable("nnapi_worker") {
     "chromeos/mojo_driver/sample_driver.cpp",
     "chromeos/mojo_driver/worker.cpp",
     "chromeos/mojo_driver/worker_main.cpp",
+    "chromeos/logger.cpp",
+  ]
+  libs = [
+    "pthread",
+  ]
+}
+
+executable("nnapi_worker_canonical") {
+  configs += [
+    ":common_defaults",
+    "//common-mk:visibility_default",
+  ]
+  cflags_cc = [
+    "-Wno-unused-parameter",
+    "-Wno-unused-lambda-capture",
+    "-Wno-unused-function"
+  ]
+  deps = [
+    ":nn-common",
+    ":nnapi-mojo-canonical-bindings-lib",
+    ":vendor-nn-hal",
+  ]
+  include_dirs = [
+    "runtime/include",
+    "chromeos",
+    "chromeos/driver_loader",
+  ]
+  sources = [
+    "chromeos/mojo_driver_canonical/worker_canonical.cpp",
+    "chromeos/mojo_driver_canonical/worker_main_canonical.cpp",
+    "chromeos/mojo_driver_canonical/nnapi_idevice_impl.cpp",
     "chromeos/logger.cpp",
   ]
   libs = [

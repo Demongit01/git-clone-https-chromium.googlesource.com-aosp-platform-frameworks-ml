@@ -282,6 +282,8 @@ struct Capabilities {
 
     class OperandPerformanceTable {
        public:
+        // Add a default constructor needed by mojo (de)serialization
+        OperandPerformanceTable() = default;
         static Result<OperandPerformanceTable> create(
                 std::vector<OperandPerformance> operandPerformances);
 

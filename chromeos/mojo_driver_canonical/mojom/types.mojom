@@ -1,0 +1,51 @@
+// Copyright 2022 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// This is a Mojo representation of the NNAPI HAL CANONICAL API
+// (https://chromium.googlesource.com/aosp/platform/frameworks/ml/+/refs/heads/main/common/types/include/nnapi/)
+
+module chromeos.nnapi.canonical.mojom;
+
+[Extensible] enum OperandType {
+    FLOAT32 = 0,
+    INT32 = 1,
+    UINT32 = 2,
+    TENSOR_FLOAT32 = 3,
+    TENSOR_INT32 = 4,
+    TENSOR_QUANT8_ASYMM = 5,
+    BOOL = 6,
+    TENSOR_QUANT16_SYMM = 7,
+    TENSOR_FLOAT16 = 8,
+    TENSOR_BOOL8 = 9,
+    FLOAT16 = 10,
+    TENSOR_QUANT8_SYMM_PER_CHANNEL = 11,
+    TENSOR_QUANT16_ASYMM = 12,
+    TENSOR_QUANT8_SYMM = 13,
+    TENSOR_QUANT8_ASYMM_SIGNED = 14,
+    SUBGRAPH = 15,
+    OEM = 10000,
+    TENSOR_OEM_BYTE = 10001,
+};
+
+struct PerformanceInfo {
+  float execTime;
+  float powerUsage;
+};
+
+struct OperandPerformance {
+  OperandType type;
+  PerformanceInfo info;
+};
+
+struct OperandPerformanceTable {
+  array<OperandPerformance> operandPerformances;
+};
+
+struct Capabilities {
+  PerformanceInfo relaxedFloat32toFloat16PerformanceScalar;
+  PerformanceInfo relaxedFloat32toFloat16PerformanceTensor;
+  OperandPerformanceTable operandPerformance;
+  PerformanceInfo ifPerformance;
+  PerformanceInfo whilePerformance;
+};

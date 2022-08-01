@@ -2,13 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <Utils.h>
-#include <android-base/logging.h>
 #include <nnapi/IDevice.h>
 
 #include "chromeos_config_portal.h"
 #include "driver_loader.h"
 #include "ipc_driver_canonical.h"
+#include "mojo_controller_canonical.h"
 
 namespace android {
 namespace nn {
@@ -21,7 +20,8 @@ GeneralResult<SharedDevice> getService(const std::string& serviceName) {
   // which will be replaced by remote driver later.
   GeneralResult<SharedDevice> result = android::nn::getService(serviceName);
   if (!result.has_value()) {
-    LOG(ERROR) << "Failed to create Device (" << result.error().code
+    LOG(ERROR) << "Failed to create Device ("
+               << static_cast<int>(result.error().code)
                << "): " << result.error().message;
     return result;
   }

@@ -4,12 +4,16 @@
 
 #include "ipc_driver_canonical.h"
 
+#include "mojo_controller_canonical.h"
+
 namespace android {
 namespace nn {
 
 IPCDriverCanonical::IPCDriverCanonical(const std::string name,
                                        SharedDevice delegate)
-    : name_{name}, delegate_(delegate) {}
+    : name_{name}, delegate_(delegate) {
+  mojo_ = std::make_unique<MojoControllerCanonical>(name);
+}
 
 const std::string& IPCDriverCanonical::getName() const {
   return name_;
@@ -33,7 +37,8 @@ const std::vector<Extension>& IPCDriverCanonical::getSupportedExtensions()
 }
 
 const Capabilities& IPCDriverCanonical::getCapabilities() const {
-  return delegate_->getCapabilities();
+  const static Capabilities capabilities = mojo_->getCapabilities();
+  return capabilities;
 }
 
 std::pair<uint32_t, uint32_t> IPCDriverCanonical::getNumberOfCacheFilesNeeded()

@@ -12,5 +12,7 @@
 void ChromeLogger(int log_buffer_id, int severity, const char* tag,
                   const char* file, unsigned int line, const char* message);
 
+// TODO: Temporarily use this macro before we find a way to enable VLOG
+#define ML_NN_CHROMEOS_VLOG_LEVEL 0
 
 #endif  // ML_NN_CHROMEOS_LOGGER_H_
