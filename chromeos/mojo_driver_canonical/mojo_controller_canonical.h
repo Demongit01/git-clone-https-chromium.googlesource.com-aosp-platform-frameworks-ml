@@ -30,6 +30,12 @@ class MojoControllerCanonical {
   MojoControllerCanonical(const std::string service_name = "default");
 
   Capabilities getCapabilities();
+  std::string getVersionString();
+  Version getFeatureLevel();
+  DeviceType getType();
+  std::vector<Extension> getSupportedExtensions();
+  std::pair<uint32_t, uint32_t> getNumberOfCacheFilesNeeded();
+  GeneralResult<void> wait();
 
  private:
   void SendMojoInvitationAndGetRemote(pid_t child_pid,

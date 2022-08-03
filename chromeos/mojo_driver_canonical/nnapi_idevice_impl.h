@@ -27,6 +27,13 @@ class IDeviceImpl : public chromeos::nnapi::canonical::mojom::IDevice {
 
  private:
   void getCapabilities(getCapabilitiesCallback callback) override;
+  void getVersionString(getVersionStringCallback callback) override;
+  void getFeatureLevel(getFeatureLevelCallback callback) override;
+  void getType(getTypeCallback callback) override;
+  void getSupportedExtensions(getSupportedExtensionsCallback callback) override;
+  void getNumberOfCacheFilesNeeded(
+      getNumberOfCacheFilesNeededCallback callback) override;
+  void wait(waitCallback callback) override;
 
   SharedDevice wrapped_driver_;
 };

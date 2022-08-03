@@ -11,4 +11,10 @@ import "aosp/frameworks/ml/chromeos/mojo_driver_canonical/mojom/types.mojom";
 
 interface IDevice {
   [Sync] getCapabilities() => (Capabilities capabilities);
+  [Sync] getVersionString() => (string version);
+  [Sync] getFeatureLevel() => (Version featureLevel);
+  [Sync] getType() => (DeviceType type);
+  [Sync] getSupportedExtensions() => (array<Extension> extensions);
+  [Sync] getNumberOfCacheFilesNeeded() => (uint32 numModelCache, uint32 numDataCache);
+  [Sync] wait() => (GeneralError status);
 };

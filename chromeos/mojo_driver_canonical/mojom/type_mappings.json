@@ -1,8 +1,72 @@
 {
   "c++": {
+    "chromeos.nnapi.canonical.mojom.GeneralError": {
+      "hashable": false,
+      "typename": "android::nn::GeneralError",
+      "forward_declaration": null,
+      "traits_headers": [
+        "types_traits.h"
+      ],
+      "copyable_pass_by_value": true,
+      "force_serialize": false,
+      "move_only": false,
+      "nullable_is_same_type": false,
+      "non_copyable_non_movable": false,
+      "public_headers": [
+        "nnapi/IDevice.h"
+      ]
+    },
     "chromeos.nnapi.canonical.mojom.Capabilities": {
       "hashable": false,
       "typename": "android::nn::Capabilities",
+      "forward_declaration": null,
+      "traits_headers": [
+        "types_traits.h"
+      ],
+      "copyable_pass_by_value": true,
+      "force_serialize": false,
+      "move_only": false,
+      "nullable_is_same_type": false,
+      "non_copyable_non_movable": false,
+      "public_headers": [
+        "nnapi/IDevice.h"
+      ]
+    },
+    "chromeos.nnapi.canonical.mojom.Version": {
+      "hashable": false,
+      "typename": "android::nn::Version",
+      "forward_declaration": null,
+      "traits_headers": [
+        "types_traits.h"
+      ],
+      "copyable_pass_by_value": true,
+      "force_serialize": false,
+      "move_only": false,
+      "nullable_is_same_type": false,
+      "non_copyable_non_movable": false,
+      "public_headers": [
+        "nnapi/IDevice.h"
+      ]
+    },
+    "chromeos.nnapi.canonical.mojom.DeviceType": {
+      "hashable": false,
+      "typename": "android::nn::DeviceType",
+      "forward_declaration": null,
+      "traits_headers": [
+        "types_traits.h"
+      ],
+      "copyable_pass_by_value": true,
+      "force_serialize": false,
+      "move_only": false,
+      "nullable_is_same_type": false,
+      "non_copyable_non_movable": false,
+      "public_headers": [
+        "nnapi/IDevice.h"
+      ]
+    },
+    "chromeos.nnapi.canonical.mojom.Extension": {
+      "hashable": false,
+      "typename": "android::nn::Extension",
       "forward_declaration": null,
       "traits_headers": [
         "types_traits.h"

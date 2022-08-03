@@ -4,6 +4,7 @@
 
 #include "ipc_driver_canonical.h"
 
+#include "logger.h"
 #include "mojo_controller_canonical.h"
 
 namespace android {
@@ -20,20 +21,23 @@ const std::string& IPCDriverCanonical::getName() const {
 }
 
 const std::string& IPCDriverCanonical::getVersionString() const {
-  return delegate_->getVersionString();
+  const static std::string version = mojo_->getVersionString();
+  return version;
 }
 
 Version IPCDriverCanonical::getFeatureLevel() const {
-  return delegate_->getFeatureLevel();
+  return mojo_->getFeatureLevel();
 }
 
 DeviceType IPCDriverCanonical::getType() const {
-  return delegate_->getType();
+  return mojo_->getType();
 }
 
 const std::vector<Extension>& IPCDriverCanonical::getSupportedExtensions()
     const {
-  return delegate_->getSupportedExtensions();
+  const static std::vector<Extension> extensions =
+      mojo_->getSupportedExtensions();
+  return extensions;
 }
 
 const Capabilities& IPCDriverCanonical::getCapabilities() const {
@@ -43,15 +47,17 @@ const Capabilities& IPCDriverCanonical::getCapabilities() const {
 
 std::pair<uint32_t, uint32_t> IPCDriverCanonical::getNumberOfCacheFilesNeeded()
     const {
-  return delegate_->getNumberOfCacheFilesNeeded();
+  return mojo_->getNumberOfCacheFilesNeeded();
 }
 
 GeneralResult<void> IPCDriverCanonical::wait() const {
-  return delegate_->wait();
+  return mojo_->wait();
 }
 
 GeneralResult<std::vector<bool>> IPCDriverCanonical::getSupportedOperations(
     const Model& model) const {
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
+      << "IPCDriverCanonical::getSupportedOperations";
   return delegate_->getSupportedOperations(model);
 }
 
@@ -66,6 +72,7 @@ GeneralResult<SharedPreparedModel> IPCDriverCanonical::prepareModel(
     const std::vector<nn::TokenValuePair>& hints,
     const std::vector<nn::ExtensionNameAndPrefix>& extensionNameToPrefix)
     const {
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "IPCDriverCanonical::prepareModel";
   return delegate_->prepareModel(model, preference, priority, deadline,
                                  modelCache, dataCache, token, hints,
                                  extensionNameToPrefix);
@@ -76,6 +83,8 @@ GeneralResult<SharedPreparedModel> IPCDriverCanonical::prepareModelFromCache(
     const std::vector<SharedHandle>& modelCache,
     const std::vector<SharedHandle>& dataCache,
     const CacheToken& token) const {
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
+      << "IPCDriverCanonical::prepareModelFromCache";
   return delegate_->prepareModelFromCache(deadline, modelCache, dataCache,
                                           token);
 }
@@ -85,6 +94,7 @@ GeneralResult<SharedBuffer> IPCDriverCanonical::allocate(
     const std::vector<SharedPreparedModel>& preparedModels,
     const std::vector<BufferRole>& inputRoles,
     const std::vector<BufferRole>& outputRoles) const {
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "IPCDriverCanonical::allocate";
   return delegate_->allocate(desc, preparedModels, inputRoles, outputRoles);
 }
 

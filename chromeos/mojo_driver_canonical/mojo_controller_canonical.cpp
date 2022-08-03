@@ -19,6 +19,7 @@
 #include <scoped_minijail.h>
 #include <signal.h>
 
+#include "handle_error_canonical.h"
 #include "logger.h"
 
 namespace android {
@@ -46,6 +47,9 @@ class MojoThread {
 };
 
 MojoThread::MojoThread() {
+  if (!::base::CurrentThread::IsSet()) {
+    (new brillo::BaseMessageLoop())->SetAsCurrent();
+  }
   mojo::core::Init();
   ipc_thread_ = std::make_unique<::base::Thread>("IpcThread");
   ipc_thread_->StartWithOptions(
@@ -190,8 +194,57 @@ bool MojoControllerCanonical::SpawnWorkerProcessAndGetPid(
 Capabilities MojoControllerCanonical::getCapabilities() {
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "MojoControllerCanonical::getCapabilities";
   android::nn::Capabilities out_capabilities;
-  remote_->getCapabilities(&out_capabilities);
+  LOG_REMOTE_CALL_FAILURE(remote_->getCapabilities(&out_capabilities));
   return out_capabilities;
+}
+
+std::string MojoControllerCanonical::getVersionString() {
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
+      << "MojoControllerCanonical::getVersionString";
+  std::string out_version;
+  LOG_REMOTE_CALL_FAILURE(remote_->getVersionString(&out_version));
+  return out_version;
+}
+
+Version MojoControllerCanonical::getFeatureLevel() {
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "MojoControllerCanonical::getFeatureLevel";
+  Version out_featureLevel;
+  LOG_REMOTE_CALL_FAILURE(remote_->getFeatureLevel(&out_featureLevel));
+  return out_featureLevel;
+}
+
+DeviceType MojoControllerCanonical::getType() {
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "MojoControllerCanonical::getType";
+  DeviceType out_type;
+  LOG_REMOTE_CALL_FAILURE(remote_->getType(&out_type));
+  return out_type;
+}
+
+std::vector<Extension> MojoControllerCanonical::getSupportedExtensions() {
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
+      << "MojoControllerCanonical::getSupportedExtensions";
+  std::vector<Extension> out_extensions;
+  LOG_REMOTE_CALL_FAILURE(remote_->getSupportedExtensions(&out_extensions));
+  return out_extensions;
+}
+
+std::pair<uint32_t, uint32_t>
+MojoControllerCanonical::getNumberOfCacheFilesNeeded() {
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
+      << "MojoControllerCanonical::getNumberOfCacheFilesNeeded";
+  uint32_t out_numModelCache;
+  uint32_t out_numDataCache;
+  LOG_REMOTE_CALL_FAILURE(remote_->getNumberOfCacheFilesNeeded(
+      &out_numModelCache, &out_numDataCache));
+  return std::pair<uint32_t, uint32_t>{out_numModelCache, out_numDataCache};
+}
+
+GeneralResult<void> MojoControllerCanonical::wait() {
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "MojoControllerCanonical::wait";
+  GeneralError status;
+  HANDLE_REMOTE_CALL_FAILURE(remote_->wait(&status),
+                             ErrorStatus::DEVICE_UNAVAILABLE);
+  return IS_OK(status.code) ? GeneralResult<void>{} : base::unexpected{status};
 }
 
 }  // namespace nn
