@@ -11,7 +11,7 @@
 #include <mojo/public/cpp/platform/platform_channel.h>
 #include <nnapi/IDevice.h>
 
-#include "aosp/frameworks/ml/chromeos/mojo_driver_canonical/mojom/idevice.mojom.h"
+#include "aosp/frameworks/ml/chromeos/mojo_driver_canonical/mojom/IDevice.mojom.h"
 
 namespace android {
 namespace nn {
@@ -36,6 +36,16 @@ class MojoControllerCanonical {
   std::vector<Extension> getSupportedExtensions();
   std::pair<uint32_t, uint32_t> getNumberOfCacheFilesNeeded();
   GeneralResult<void> wait();
+  GeneralResult<SharedPreparedModel> prepareModel(
+      const Model& model,
+      ExecutionPreference preference,
+      Priority priority,
+      OptionalTimePoint deadline,
+      const std::vector<SharedHandle>& modelCache,
+      const std::vector<SharedHandle>& dataCache,
+      const CacheToken& token,
+      const std::vector<nn::TokenValuePair>& hints,
+      const std::vector<nn::ExtensionNameAndPrefix>& extensionNameToPrefix);
 
  private:
   void SendMojoInvitationAndGetRemote(pid_t child_pid,

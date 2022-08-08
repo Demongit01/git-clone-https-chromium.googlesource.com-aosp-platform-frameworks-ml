@@ -177,8 +177,9 @@ generate_mojom_bindings("nnapi-mojo-canonical-bindings-lib") {
     "-Wno-unused-parameter",
   ]
   sources = [
-    "chromeos/mojo_driver_canonical/mojom/idevice.mojom",
-    "chromeos/mojo_driver_canonical/mojom/types.mojom",
+    "chromeos/mojo_driver_canonical/mojom/IDevice.mojom",
+    "chromeos/mojo_driver_canonical/mojom/IPreparedModel.mojom",
+    "chromeos/mojo_driver_canonical/mojom/Types.mojom",
   ]
   include_dirs = [
     "chromeos/mojo_driver_canonical/mojom",
@@ -705,6 +706,7 @@ shared_library("mojo-driver-canonical") {
   sources = [
     "chromeos/mojo_driver_canonical/ipc_driver_canonical.cpp",
     "chromeos/mojo_driver_canonical/mojo_controller_canonical.cpp",
+    "chromeos/mojo_driver_canonical/prepared_model_stub.cpp",
   ]
   libs = [
     "pthread",
@@ -765,10 +767,11 @@ executable("nnapi_worker_canonical") {
     "chromeos/driver_loader",
   ]
   sources = [
+    "chromeos/logger.cpp",
+    "chromeos/mojo_driver_canonical/nnapi_idevice_impl.cpp",
+    "chromeos/mojo_driver_canonical/nnapi_iprepared_model_impl.cpp",
     "chromeos/mojo_driver_canonical/worker_canonical.cpp",
     "chromeos/mojo_driver_canonical/worker_main_canonical.cpp",
-    "chromeos/mojo_driver_canonical/nnapi_idevice_impl.cpp",
-    "chromeos/logger.cpp",
   ]
   libs = [
     "pthread",

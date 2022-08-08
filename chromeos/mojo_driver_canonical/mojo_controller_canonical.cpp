@@ -21,6 +21,7 @@
 
 #include "handle_error_canonical.h"
 #include "logger.h"
+#include "prepared_model_stub.h"
 
 namespace android {
 namespace nn {
@@ -124,7 +125,6 @@ bool MojoControllerCanonical::SpawnWorkerProcessAndGetPid(
       channel.remote_endpoint().platform_handle().GetFD().get();
 
   ScopedMinijail jail(minijail_new());
-
 #ifdef NNAPI_HAL_IPC_DRIVER_IN_CHROOT
   // Skip in order to conveniently run ipc driver in chroot during dev phase.
 #else
@@ -245,6 +245,33 @@ GeneralResult<void> MojoControllerCanonical::wait() {
   HANDLE_REMOTE_CALL_FAILURE(remote_->wait(&status),
                              ErrorStatus::DEVICE_UNAVAILABLE);
   return IS_OK(status.code) ? GeneralResult<void>{} : base::unexpected{status};
+}
+
+GeneralResult<SharedPreparedModel> MojoControllerCanonical::prepareModel(
+    const Model& model,
+    ExecutionPreference preference,
+    Priority priority,
+    OptionalTimePoint deadline,
+    const std::vector<SharedHandle>& modelCache,
+    const std::vector<SharedHandle>& dataCache,
+    const CacheToken& token,
+    const std::vector<nn::TokenValuePair>& hints,
+    const std::vector<nn::ExtensionNameAndPrefix>& extensionNameToPrefix) {
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "MojoControllerCanonical::prepareModel";
+  GeneralError status;
+  ::mojo::PendingRemote<chromeos::nnapi::canonical::mojom::IPreparedModel>
+      out_preparedModel;
+  HANDLE_REMOTE_CALL_FAILURE(
+      remote_->prepareModel(model, preference, priority, deadline, modelCache,
+                            dataCache, token, hints, extensionNameToPrefix,
+                            &status, &out_preparedModel),
+      ErrorStatus::DEVICE_UNAVAILABLE);
+  if (!IS_OK(status.code)) {
+    return base::unexpected{status};
+  }
+  std::shared_ptr<IPreparedModel> prepared_model_stub{
+      new android::nn::PreparedModelStub(std::move(out_preparedModel))};
+  return prepared_model_stub;
 }
 
 }  // namespace nn

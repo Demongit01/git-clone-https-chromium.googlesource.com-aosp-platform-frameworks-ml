@@ -72,8 +72,7 @@ GeneralResult<SharedPreparedModel> IPCDriverCanonical::prepareModel(
     const std::vector<nn::TokenValuePair>& hints,
     const std::vector<nn::ExtensionNameAndPrefix>& extensionNameToPrefix)
     const {
-  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "IPCDriverCanonical::prepareModel";
-  return delegate_->prepareModel(model, preference, priority, deadline,
+  return mojo_->prepareModel(model, preference, priority, deadline,
                                  modelCache, dataCache, token, hints,
                                  extensionNameToPrefix);
 }

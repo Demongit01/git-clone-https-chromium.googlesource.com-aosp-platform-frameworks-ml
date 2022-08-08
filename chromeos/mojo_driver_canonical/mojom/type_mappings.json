@@ -79,6 +79,230 @@
       "public_headers": [
         "nnapi/IDevice.h"
       ]
+    },
+    "chromeos.nnapi.canonical.mojom.Model": {
+      "hashable": false,
+      "typename": "android::nn::Model",
+      "forward_declaration": null,
+      "traits_headers": [
+        "types_traits.h"
+      ],
+      "copyable_pass_by_value": true,
+      "force_serialize": false,
+      "move_only": false,
+      "nullable_is_same_type": false,
+      "non_copyable_non_movable": false,
+      "public_headers": [
+        "nnapi/IDevice.h"
+      ]
+    },
+    "chromeos.nnapi.canonical.mojom.ExecutionPreference": {
+      "hashable": false,
+      "typename": "android::nn::ExecutionPreference",
+      "forward_declaration": null,
+      "traits_headers": [
+        "types_traits.h"
+      ],
+      "copyable_pass_by_value": true,
+      "force_serialize": false,
+      "move_only": false,
+      "nullable_is_same_type": false,
+      "non_copyable_non_movable": false,
+      "public_headers": [
+        "nnapi/IDevice.h"
+      ]
+    },
+    "chromeos.nnapi.canonical.mojom.Priority": {
+      "hashable": false,
+      "typename": "android::nn::Priority",
+      "forward_declaration": null,
+      "traits_headers": [
+        "types_traits.h"
+      ],
+      "copyable_pass_by_value": true,
+      "force_serialize": false,
+      "move_only": false,
+      "nullable_is_same_type": false,
+      "non_copyable_non_movable": false,
+      "public_headers": [
+        "nnapi/IDevice.h"
+      ]
+    },
+    "chromeos.nnapi.canonical.mojom.TimePoint": {
+      "hashable": false,
+      "typename": "android::nn::TimePoint",
+      "forward_declaration": null,
+      "traits_headers": [
+        "types_traits.h"
+      ],
+      "copyable_pass_by_value": true,
+      "force_serialize": false,
+      "move_only": false,
+      "nullable_is_same_type": false,
+      "non_copyable_non_movable": false,
+      "public_headers": [
+        "nnapi/IDevice.h"
+      ]
+    },
+    "chromeos.nnapi.canonical.mojom.NnHandle": {
+      "hashable": false,
+      "typename": "android::nn::SharedHandle",
+      "forward_declaration": null,
+      "traits_headers": [
+        "types_traits.h"
+      ],
+      "copyable_pass_by_value": true,
+      "force_serialize": false,
+      "move_only": false,
+      "nullable_is_same_type": false,
+      "non_copyable_non_movable": false,
+      "public_headers": [
+        "nnapi/IDevice.h"
+      ]
+    },
+    "chromeos.nnapi.canonical.mojom.CacheToken": {
+      "hashable": false,
+      "typename": "android::nn::CacheToken",
+      "forward_declaration": null,
+      "traits_headers": [
+        "types_traits.h"
+      ],
+      "copyable_pass_by_value": true,
+      "force_serialize": false,
+      "move_only": false,
+      "nullable_is_same_type": false,
+      "non_copyable_non_movable": false,
+      "public_headers": [
+        "nnapi/IDevice.h"
+      ]
+    },
+    "chromeos.nnapi.canonical.mojom.TokenValuePair": {
+      "hashable": false,
+      "typename": "android::nn::TokenValuePair",
+      "forward_declaration": null,
+      "traits_headers": [
+        "types_traits.h"
+      ],
+      "copyable_pass_by_value": true,
+      "force_serialize": false,
+      "move_only": false,
+      "nullable_is_same_type": false,
+      "non_copyable_non_movable": false,
+      "public_headers": [
+        "nnapi/IDevice.h"
+      ]
+    },
+    "chromeos.nnapi.canonical.mojom.ExtensionNameAndPrefix": {
+      "hashable": false,
+      "typename": "android::nn::ExtensionNameAndPrefix",
+      "forward_declaration": null,
+      "traits_headers": [
+        "types_traits.h"
+      ],
+      "copyable_pass_by_value": true,
+      "force_serialize": false,
+      "move_only": false,
+      "nullable_is_same_type": false,
+      "non_copyable_non_movable": false,
+      "public_headers": [
+        "nnapi/IDevice.h"
+      ]
+    },
+    "chromeos.nnapi.canonical.mojom.Request": {
+      "hashable": false,
+      "typename": "android::nn::Request",
+      "forward_declaration": null,
+      "traits_headers": [
+        "types_traits.h"
+      ],
+      "copyable_pass_by_value": true,
+      "force_serialize": false,
+      "move_only": false,
+      "nullable_is_same_type": false,
+      "non_copyable_non_movable": false,
+      "public_headers": [
+        "nnapi/IPreparedModel.h"
+      ]
+    },
+    "chromeos.nnapi.canonical.mojom.Duration": {
+      "hashable": false,
+      "typename": "android::nn::Duration",
+      "forward_declaration": null,
+      "traits_headers": [
+        "types_traits.h"
+      ],
+      "copyable_pass_by_value": true,
+      "force_serialize": false,
+      "move_only": false,
+      "nullable_is_same_type": false,
+      "non_copyable_non_movable": false,
+      "public_headers": [
+        "nnapi/IPreparedModel.h"
+      ]
+    },
+    "chromeos.nnapi.canonical.mojom.MeasureTiming": {
+      "hashable": false,
+      "typename": "android::nn::MeasureTiming",
+      "forward_declaration": null,
+      "traits_headers": [
+        "types_traits.h"
+      ],
+      "copyable_pass_by_value": true,
+      "force_serialize": false,
+      "move_only": false,
+      "nullable_is_same_type": false,
+      "non_copyable_non_movable": false,
+      "public_headers": [
+        "nnapi/IPreparedModel.h"
+      ]
+    },
+    "chromeos.nnapi.canonical.mojom.OutputShape": {
+      "hashable": false,
+      "typename": "android::nn::OutputShape",
+      "forward_declaration": null,
+      "traits_headers": [
+        "types_traits.h"
+      ],
+      "copyable_pass_by_value": true,
+      "force_serialize": false,
+      "move_only": false,
+      "nullable_is_same_type": false,
+      "non_copyable_non_movable": false,
+      "public_headers": [
+        "nnapi/IPreparedModel.h"
+      ]
+    },
+    "chromeos.nnapi.canonical.mojom.ExecutionError": {
+      "hashable": false,
+      "typename": "android::nn::ExecutionError",
+      "forward_declaration": null,
+      "traits_headers": [
+        "types_traits.h"
+      ],
+      "copyable_pass_by_value": true,
+      "force_serialize": false,
+      "move_only": false,
+      "nullable_is_same_type": false,
+      "non_copyable_non_movable": false,
+      "public_headers": [
+        "nnapi/IPreparedModel.h"
+      ]
+    },
+    "chromeos.nnapi.canonical.mojom.Timing": {
+      "hashable": false,
+      "typename": "android::nn::Timing",
+      "forward_declaration": null,
+      "traits_headers": [
+        "types_traits.h"
+      ],
+      "copyable_pass_by_value": true,
+      "force_serialize": false,
+      "move_only": false,
+      "nullable_is_same_type": false,
+      "non_copyable_non_movable": false,
+      "public_headers": [
+        "nnapi/IPreparedModel.h"
+      ]
     }
   }
 }

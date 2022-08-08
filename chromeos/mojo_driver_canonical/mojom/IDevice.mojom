@@ -7,7 +7,8 @@
 
 module chromeos.nnapi.canonical.mojom;
 
-import "aosp/frameworks/ml/chromeos/mojo_driver_canonical/mojom/types.mojom";
+import "aosp/frameworks/ml/chromeos/mojo_driver_canonical/mojom/Types.mojom";
+import "aosp/frameworks/ml/chromeos/mojo_driver_canonical/mojom/IPreparedModel.mojom";
 
 interface IDevice {
   [Sync] getCapabilities() => (Capabilities capabilities);
@@ -17,4 +18,11 @@ interface IDevice {
   [Sync] getSupportedExtensions() => (array<Extension> extensions);
   [Sync] getNumberOfCacheFilesNeeded() => (uint32 numModelCache, uint32 numDataCache);
   [Sync] wait() => (GeneralError status);
+  [Sync] prepareModel(
+          Model model, ExecutionPreference preference, Priority priority,
+          TimePoint? deadline, array<NnHandle> modelCache,
+          array<NnHandle> dataCache, CacheToken token,
+          array<TokenValuePair> hints,
+          array<ExtensionNameAndPrefix> extensionNameToPrefix)
+          => (GeneralError generalError, pending_remote<IPreparedModel>? preparedModel);
 };

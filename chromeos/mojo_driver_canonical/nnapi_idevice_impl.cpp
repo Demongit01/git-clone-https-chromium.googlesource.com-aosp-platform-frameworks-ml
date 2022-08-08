@@ -6,6 +6,7 @@
 
 #include <mojo/public/cpp/bindings/self_owned_receiver.h>
 
+#include "nnapi_iprepared_model_impl.h"
 #include "logger.h"
 
 namespace android {
@@ -59,6 +60,34 @@ void IDeviceImpl::wait(waitCallback callback) {
         GeneralError{"wait successfully", ErrorStatus::NONE});
   } else {
     std::move(callback).Run(result.error());
+  }
+}
+
+void IDeviceImpl::prepareModel(
+    Model model,
+    ExecutionPreference preference,
+    Priority priority,
+    absl::optional<TimePoint> deadline,
+    const std::vector<SharedHandle>& modelCache,
+    const std::vector<SharedHandle>& dataCache,
+    CacheToken token,
+    const std::vector<TokenValuePair>& hints,
+    const std::vector<ExtensionNameAndPrefix>& extensionNameToPrefix,
+    prepareModelCallback callback) {
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "IDeviceImpl::prepareModel";
+  auto result = wrapped_driver_->prepareModel(
+      model, preference, priority, deadline, modelCache, dataCache, token,
+      hints, extensionNameToPrefix);
+  if (result.ok()) {
+    mojo::PendingRemote<mojom::IPreparedModel> pm_remote;
+    mojo::MakeSelfOwnedReceiver(
+        std::make_unique<IPreparedModelImpl>(result.value()),
+        pm_remote.InitWithNewPipeAndPassReceiver());
+    std::move(callback).Run(
+        GeneralError{"preparedModel successfully", ErrorStatus::NONE},
+        std::move(pm_remote));
+  } else {
+    std::move(callback).Run(result.error(), {});
   }
 }
 

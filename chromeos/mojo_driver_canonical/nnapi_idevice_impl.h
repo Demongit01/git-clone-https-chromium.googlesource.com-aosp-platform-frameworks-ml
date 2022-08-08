@@ -5,7 +5,7 @@
 #ifndef ML_NN_CHROMEOS_NNAPI_IDEVICE_IMPL_H_
 #define ML_NN_CHROMEOS_NNAPI_IDEVICE_IMPL_H_
 
-#include "aosp/frameworks/ml/chromeos/mojo_driver_canonical/mojom/idevice.mojom.h"
+#include "aosp/frameworks/ml/chromeos/mojo_driver_canonical/mojom/IDevice.mojom.h"
 
 #include <base/task/task_runner.h>
 #include <mojo/public/cpp/bindings/pending_receiver.h>
@@ -34,6 +34,17 @@ class IDeviceImpl : public chromeos::nnapi::canonical::mojom::IDevice {
   void getNumberOfCacheFilesNeeded(
       getNumberOfCacheFilesNeededCallback callback) override;
   void wait(waitCallback callback) override;
+  void prepareModel(
+      Model model,
+      ExecutionPreference preference,
+      Priority priority,
+      absl::optional<TimePoint> deadline,
+      const std::vector<SharedHandle>& modelCache,
+      const std::vector<SharedHandle>& dataCache,
+      CacheToken token,
+      const std::vector<TokenValuePair>& hints,
+      const std::vector<ExtensionNameAndPrefix>& extensionNameToPrefix,
+      prepareModelCallback callback) override;
 
   SharedDevice wrapped_driver_;
 };

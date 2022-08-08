@@ -12,7 +12,7 @@
 
 #include <nnapi/IDevice.h>
 
-#include "aosp/frameworks/ml/chromeos/mojo_driver_canonical/mojom/idevice.mojom.h"
+#include "aosp/frameworks/ml/chromeos/mojo_driver_canonical/mojom/IDevice.mojom.h"
 #include "driver_loader.h"
 #include "nnapi_idevice_impl.h"
 
