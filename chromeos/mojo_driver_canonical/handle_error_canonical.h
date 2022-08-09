@@ -20,6 +20,12 @@ namespace nnapi {
 
 #define IS_OK(status) ((status) == android::nn::ErrorStatus::NONE)
 
+#define HANDLE_ERROR_RESULT(re, callback, ...)          \
+  if (!(re).ok()) {                                     \
+    std::move(callback).Run(re.error(), ##__VA_ARGS__); \
+    return;                                             \
+  }
+
 }  // namespace nnapi
 }  // namespace chromeos
 

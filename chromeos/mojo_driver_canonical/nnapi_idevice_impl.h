@@ -34,6 +34,8 @@ class IDeviceImpl : public chromeos::nnapi::canonical::mojom::IDevice {
   void getNumberOfCacheFilesNeeded(
       getNumberOfCacheFilesNeededCallback callback) override;
   void wait(waitCallback callback) override;
+  void getSupportedOperations(Model model,
+                              getSupportedOperationsCallback callback) override;
   void prepareModel(
       Model model,
       ExecutionPreference preference,

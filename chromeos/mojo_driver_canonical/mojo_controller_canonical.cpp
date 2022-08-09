@@ -247,6 +247,21 @@ GeneralResult<void> MojoControllerCanonical::wait() {
   return IS_OK(status.code) ? GeneralResult<void>{} : base::unexpected{status};
 }
 
+GeneralResult<std::vector<bool>>
+MojoControllerCanonical::getSupportedOperations(const Model& model) {
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
+      << "MojoControllerCanonical::getSupportedOperations";
+  GeneralError status;
+  std::vector<bool> supportedOperations;
+  HANDLE_REMOTE_CALL_FAILURE(
+      remote_->getSupportedOperations(model, &status, &supportedOperations),
+      ErrorStatus::DEVICE_UNAVAILABLE);
+  if (!IS_OK(status.code)) {
+    return base::unexpected{status};
+  }
+  return supportedOperations;
+}
+
 GeneralResult<SharedPreparedModel> MojoControllerCanonical::prepareModel(
     const Model& model,
     ExecutionPreference preference,

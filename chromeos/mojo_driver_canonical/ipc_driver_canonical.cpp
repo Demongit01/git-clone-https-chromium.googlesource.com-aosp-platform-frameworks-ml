@@ -56,9 +56,7 @@ GeneralResult<void> IPCDriverCanonical::wait() const {
 
 GeneralResult<std::vector<bool>> IPCDriverCanonical::getSupportedOperations(
     const Model& model) const {
-  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
-      << "IPCDriverCanonical::getSupportedOperations";
-  return delegate_->getSupportedOperations(model);
+  return mojo_->getSupportedOperations(model);
 }
 
 GeneralResult<SharedPreparedModel> IPCDriverCanonical::prepareModel(

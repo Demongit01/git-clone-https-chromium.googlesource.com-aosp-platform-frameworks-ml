@@ -18,6 +18,8 @@ interface IDevice {
   [Sync] getSupportedExtensions() => (array<Extension> extensions);
   [Sync] getNumberOfCacheFilesNeeded() => (uint32 numModelCache, uint32 numDataCache);
   [Sync] wait() => (GeneralError status);
+  [Sync] getSupportedOperations(Model model)
+          => (GeneralError generalError, array<bool> supportedOperations);
   [Sync] prepareModel(
           Model model, ExecutionPreference preference, Priority priority,
           TimePoint? deadline, array<NnHandle> modelCache,

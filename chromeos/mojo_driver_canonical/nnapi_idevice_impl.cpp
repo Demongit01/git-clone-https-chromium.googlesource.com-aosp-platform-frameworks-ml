@@ -6,13 +6,16 @@
 
 #include <mojo/public/cpp/bindings/self_owned_receiver.h>
 
-#include "nnapi_iprepared_model_impl.h"
+#include "handle_error_canonical.h"
 #include "logger.h"
+#include "nnapi_iprepared_model_impl.h"
 
 namespace android {
 namespace nn {
 
 using namespace chromeos::nnapi::canonical;
+
+const GeneralError kGeneralErrorNone = GeneralError{"", ErrorStatus::NONE};
 
 void IDeviceImpl::getCapabilities(getCapabilitiesCallback callback) {
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "IDeviceImpl::getCapabilities";
@@ -55,12 +58,17 @@ void IDeviceImpl::getNumberOfCacheFilesNeeded(
 void IDeviceImpl::wait(waitCallback callback) {
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "IDeviceImpl::wait";
   auto result = wrapped_driver_->wait();
-  if (result.ok()) {
-    std::move(callback).Run(
-        GeneralError{"wait successfully", ErrorStatus::NONE});
-  } else {
-    std::move(callback).Run(result.error());
-  }
+  HANDLE_ERROR_RESULT(result, callback);
+  std::move(callback).Run(kGeneralErrorNone);
+}
+
+void IDeviceImpl::getSupportedOperations(
+    Model model,
+    getSupportedOperationsCallback callback) {
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "IDeviceImpl::getSupportedOperations";
+  auto result = wrapped_driver_->getSupportedOperations(model);
+  HANDLE_ERROR_RESULT(result, callback, {});
+  std::move(callback).Run(kGeneralErrorNone, result.value());
 }
 
 void IDeviceImpl::prepareModel(
@@ -75,20 +83,17 @@ void IDeviceImpl::prepareModel(
     const std::vector<ExtensionNameAndPrefix>& extensionNameToPrefix,
     prepareModelCallback callback) {
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "IDeviceImpl::prepareModel";
+
   auto result = wrapped_driver_->prepareModel(
       model, preference, priority, deadline, modelCache, dataCache, token,
       hints, extensionNameToPrefix);
-  if (result.ok()) {
-    mojo::PendingRemote<mojom::IPreparedModel> pm_remote;
-    mojo::MakeSelfOwnedReceiver(
-        std::make_unique<IPreparedModelImpl>(result.value()),
-        pm_remote.InitWithNewPipeAndPassReceiver());
-    std::move(callback).Run(
-        GeneralError{"preparedModel successfully", ErrorStatus::NONE},
-        std::move(pm_remote));
-  } else {
-    std::move(callback).Run(result.error(), {});
-  }
+  HANDLE_ERROR_RESULT(result, callback, {});
+
+  mojo::PendingRemote<mojom::IPreparedModel> pm_remote;
+  mojo::MakeSelfOwnedReceiver(
+      std::make_unique<IPreparedModelImpl>(result.value()),
+      pm_remote.InitWithNewPipeAndPassReceiver());
+  std::move(callback).Run(kGeneralErrorNone, std::move(pm_remote));
 }
 
 }  // namespace nn

@@ -6,12 +6,16 @@
 
 #include <mojo/public/cpp/bindings/self_owned_receiver.h>
 
+#include "handle_error_canonical.h"
 #include "logger.h"
 
 namespace android {
 namespace nn {
 
 using namespace chromeos::nnapi::canonical;
+
+const ExecutionError kExecutionErrorNone =
+    ExecutionError{"", ErrorStatus::NONE};
 
 void IPreparedModelImpl::execute(
     Request request,
@@ -21,22 +25,12 @@ void IPreparedModelImpl::execute(
     const std::vector<TokenValuePair>& hints,
     const std::vector<ExtensionNameAndPrefix>& extensionNameToPrefix,
     executeCallback callback) {
-  LOG(INFO) << "IPreparedModelImpl::execute";
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "IPreparedModelImpl::execute";
   auto result =
       wrapped_model_->execute(request, measure, deadline, loopTimeoutDuration,
                               hints, extensionNameToPrefix);
-  if (result.ok()) {
-    std::move(callback).Run(
-        ExecutionError{"preparedModel executed successfully",
-                       ErrorStatus::NONE},
-        result->first, result->second);
-    LOG(INFO) << "IPreparedModelImpl::execute: okay";
-  } else {
-    std::move(callback).Run(result.error(), {}, {});
-    LOG(INFO) << "IPreparedModelImpl::execute:"
-              << static_cast<int>(result.error().code) << ":"
-              << result.error().message;
-  }
+  HANDLE_ERROR_RESULT(result, callback, {}, {});
+  std::move(callback).Run(kExecutionErrorNone, result->first, result->second);
 }
 
 }  // namespace nn

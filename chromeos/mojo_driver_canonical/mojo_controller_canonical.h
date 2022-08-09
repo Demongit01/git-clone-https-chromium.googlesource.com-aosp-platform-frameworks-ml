@@ -36,6 +36,7 @@ class MojoControllerCanonical {
   std::vector<Extension> getSupportedExtensions();
   std::pair<uint32_t, uint32_t> getNumberOfCacheFilesNeeded();
   GeneralResult<void> wait();
+  GeneralResult<std::vector<bool>> getSupportedOperations(const Model& model);
   GeneralResult<SharedPreparedModel> prepareModel(
       const Model& model,
       ExecutionPreference preference,
