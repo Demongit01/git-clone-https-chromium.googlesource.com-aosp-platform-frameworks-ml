@@ -951,6 +951,7 @@ struct Request {
 // Representation of sync_fence.
 class SyncFence {
    public:
+    SyncFence() = default;
     static SyncFence createAsSignaled();
     static SyncFence create(base::unique_fd fd);
     static Result<SyncFence> create(SharedHandle syncFence);

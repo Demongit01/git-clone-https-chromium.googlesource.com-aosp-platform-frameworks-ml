@@ -125,6 +125,7 @@ bool MojoControllerCanonical::SpawnWorkerProcessAndGetPid(
       channel.remote_endpoint().platform_handle().GetFD().get();
 
   ScopedMinijail jail(minijail_new());
+#define NNAPI_HAL_IPC_DRIVER_IN_CHROOT
 #ifdef NNAPI_HAL_IPC_DRIVER_IN_CHROOT
   // Skip in order to conveniently run ipc driver in chroot during dev phase.
 #else

@@ -303,6 +303,22 @@
       "public_headers": [
         "nnapi/IPreparedModel.h"
       ]
+    },
+    "chromeos.nnapi.canonical.mojom.SyncFence": {
+      "hashable": false,
+      "typename": "android::nn::SyncFence",
+      "forward_declaration": null,
+      "traits_headers": [
+        "types_traits.h"
+      ],
+      "copyable_pass_by_value": false,
+      "force_serialize": false,
+      "move_only": true,
+      "nullable_is_same_type": false,
+      "non_copyable_non_movable": false,
+      "public_headers": [
+        "nnapi/IPreparedModel.h"
+      ]
     }
   }
 }

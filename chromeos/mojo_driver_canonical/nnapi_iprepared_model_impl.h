@@ -13,6 +13,7 @@
 #include <mojo/public/cpp/bindings/receiver_set.h>
 
 #include "nnapi/Types.h"
+#include "utils/StrongPointer.h"
 
 // These classes will wrap the "real" HAL driver in the worker process
 // and receive the IPC calls from the client IPC driver in the
@@ -36,8 +37,31 @@ class IPreparedModelImpl
                const std::vector<ExtensionNameAndPrefix>& extensionNameToPrefix,
                executeCallback callback) override;
 
+  void executeFenced(
+      Request request,
+      std::vector<SyncFence> waitFor,
+      MeasureTiming measure,
+      absl::optional<TimePoint> deadline,
+      absl::optional<Duration> loopTimeoutDuration,
+      absl::optional<Duration> timeoutDurationAfterFence,
+      const std::vector<TokenValuePair>& hints,
+      const std::vector<ExtensionNameAndPrefix>& extensionNameToPrefix,
+      executeFencedCallback callback) override;
+
  private:
   SharedPreparedModel wrapped_model_;
+};
+
+class IExecuteFencedInfoCallbackImpl
+    : public chromeos::nnapi::canonical::mojom::IExecuteFencedInfoCallback {
+ public:
+  IExecuteFencedInfoCallbackImpl(ExecuteFencedInfoCallback callback)
+      : wrapped_callback_(callback) {}
+
+  void getExecuteFencedInfo(getExecuteFencedInfoCallback callback);
+
+ private:
+  ExecuteFencedInfoCallback wrapped_callback_;
 };
 
 }  // namespace nn

@@ -1061,4 +1061,25 @@ struct StructTraits<chromeos::nnapi::canonical::mojom::Request::DataView,
   }
 };
 
+template <>
+struct StructTraits<chromeos::nnapi::canonical::mojom::SyncFence::DataView,
+                    android::nn::SyncFence> {
+ public:
+  static const android::nn::SharedHandle mSyncFence(
+      const android::nn::SyncFence& input) {
+    return input.getSharedHandle();
+  }
+
+  static bool Read(
+      chromeos::nnapi::canonical::mojom::SyncFence::DataView& input,
+      android::nn::SyncFence* out) {
+    bool result = true;
+    chromeos::nnapi::canonical::mojom::NnHandle::DataView data;
+    input.GetMSyncFenceDataView(&data);
+    *out = android::nn::SyncFence::create(
+        android::base::unique_fd{data.TakeFd().ReleaseFD()});
+    return result;
+  }
+};
+
 }  // namespace mojo

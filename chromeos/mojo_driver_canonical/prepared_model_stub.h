@@ -45,15 +45,6 @@ class PreparedModelStub : public IPreparedModel, public HasSequencedTaskRunner {
       const std::vector<ExtensionNameAndPrefix>& extensionNameToPrefix)
       const override;
 
-  ExecutionResult<std::pair<std::vector<OutputShape>, Timing>> executeInternal(
-      const Request& request,
-      MeasureTiming measure,
-      const OptionalTimePoint& deadline,
-      const OptionalDuration& loopTimeoutDuration,
-      const std::vector<nn::TokenValuePair>& hints,
-      const std::vector<nn::ExtensionNameAndPrefix>& extensionNameToPrefix,
-      const RequestRelocation& relocation) const;
-
   GeneralResult<std::pair<SyncFence, ExecuteFencedInfoCallback>> executeFenced(
       const Request& request,
       const std::vector<SyncFence>& waitFor,
@@ -80,6 +71,27 @@ class PreparedModelStub : public IPreparedModel, public HasSequencedTaskRunner {
  private:
   mutable mojo::PendingRemote<chromeos::nnapi::canonical::mojom::IPreparedModel>
       pending_remote_;
+
+  ExecutionResult<std::pair<std::vector<OutputShape>, Timing>> executeInternal(
+      const Request& request,
+      MeasureTiming measure,
+      const OptionalTimePoint& deadline,
+      const OptionalDuration& loopTimeoutDuration,
+      const std::vector<nn::TokenValuePair>& hints,
+      const std::vector<nn::ExtensionNameAndPrefix>& extensionNameToPrefix,
+      const RequestRelocation& relocation) const;
+
+  GeneralResult<std::pair<SyncFence, ExecuteFencedInfoCallback>>
+  executeFencedInternal(
+      const Request& request,
+      const std::vector<SyncFence>& waitFor,
+      MeasureTiming measure,
+      const OptionalTimePoint& deadline,
+      const OptionalDuration& loopTimeoutDuration,
+      const OptionalDuration& timeoutDurationAfterFence,
+      const std::vector<TokenValuePair>& hints,
+      const std::vector<ExtensionNameAndPrefix>& extensionNameToPrefix,
+      const RequestRelocation& relocation) const;
 };
 
 }  // namespace nn

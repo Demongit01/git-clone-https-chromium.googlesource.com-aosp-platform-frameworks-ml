@@ -16,4 +16,15 @@ interface IPreparedModel {
           array<TokenValuePair> hints,
           array<ExtensionNameAndPrefix> extensionNameToPrefix)
           => (ExecutionError executionError, array<OutputShape> outputShape, Timing timing);
+
+  [Sync] executeFenced(
+          Request request, array<SyncFence> waitFor, MeasureTiming measure,
+          TimePoint? deadline, Duration? loopTimeoutDuration, Duration? timeoutDurationAfterFence,
+          array<TokenValuePair> hints,
+          array<ExtensionNameAndPrefix> extensionNameToPrefix)
+          => (GeneralError status, SyncFence syncFence, pending_remote<IExecuteFencedInfoCallback> executionCallback);
+};
+
+interface IExecuteFencedInfoCallback {
+  [Sync] getExecuteFencedInfo() => (GeneralError status, Timing timingLaunched, Timing timingFenced);
 };
