@@ -8,6 +8,7 @@
 
 #include "handle_error_canonical.h"
 #include "logger.h"
+#include "nnapi_iburst_impl.h"
 
 namespace android {
 namespace nn {
@@ -55,6 +56,18 @@ void IPreparedModelImpl::executeFenced(
       pm_remote.InitWithNewPipeAndPassReceiver());
   std::move(callback).Run(kGeneralErrorNone, result.value().first,
                           std::move(pm_remote));
+}
+
+void IPreparedModelImpl::configureExecutionBurst(
+    configureExecutionBurstCallback callback) {
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
+      << "IPreparedModelImpl::configureExecutionBurst";
+  auto result = wrapped_model_->configureExecutionBurst();
+  HANDLE_ERROR_RESULT(result, callback, {});
+  mojo::PendingRemote<mojom::IBurst> pm_remote;
+  mojo::MakeSelfOwnedReceiver(std::make_unique<IBurstImpl>(result.value()),
+                              pm_remote.InitWithNewPipeAndPassReceiver());
+  std::move(callback).Run(kGeneralErrorNone, std::move(pm_remote));
 }
 
 void IExecuteFencedInfoCallbackImpl::getExecuteFencedInfo(

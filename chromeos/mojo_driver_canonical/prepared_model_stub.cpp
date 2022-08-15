@@ -6,6 +6,7 @@
 
 #include <mojo/public/cpp/bindings/self_owned_receiver.h>
 
+#include "burst_stub.h"
 #include "handle_error_canonical.h"
 #include "logger.h"
 
@@ -46,24 +47,22 @@ PreparedModelStub::executeInternal(
   if (relocation.input) {
     relocation.input->flush();
   }
-
   auto remote = mojo::Remote<mojom::IPreparedModel>(std::move(pending_remote_));
-  android::nn::ExecutionError executionError;
+  android::nn::ExecutionError status;
   std::vector<android::nn::OutputShape> outputShape;
   android::nn::Timing timing;
-  remote->execute(request, measure, deadline, loopTimeoutDuration, hints,
-                  extensionNameToPrefix, &executionError, &outputShape,
-                  &timing);
+  HANDLE_REMOTE_CALL_FAILURE(
+      remote->execute(request, measure, deadline, loopTimeoutDuration, hints,
+                      extensionNameToPrefix, &status, &outputShape, &timing),
+      ErrorStatus::DEVICE_UNAVAILABLE);
   pending_remote_ = remote.Unbind();
-
   if (relocation.output) {
     relocation.output->flush();
   }
-
-  if (ErrorStatus::NONE == executionError.code) {
-    return std::pair<std::vector<OutputShape>, Timing>{outputShape, timing};
+  if (!IS_OK(status.code)) {
+    return base::unexpected{status};
   }
-  return base::unexpected{executionError};
+  return std::pair<std::vector<OutputShape>, Timing>{outputShape, timing};
 }
 
 GeneralResult<std::pair<SyncFence, ExecuteFencedInfoCallback>>
@@ -148,19 +147,26 @@ GeneralResult<SharedExecution> PreparedModelStub::createReusableExecution(
     const std::vector<nn::TokenValuePair>& hints,
     const std::vector<nn::ExtensionNameAndPrefix>& extensionNameToPrefix)
     const {
-  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
-      << "PreparedModelStub::createReusableExecution";
-  return {};
+  return NN_ERROR()
+         << "IPreparedModel::createReusableExecution is not supported.";
 }
 
 GeneralResult<SharedBurst> PreparedModelStub::configureExecutionBurst() const {
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
       << "PreparedModelStub::configureExecutionBurst";
-  return {};
+  auto remote = mojo::Remote<mojom::IPreparedModel>(std::move(pending_remote_));
+  android::nn::GeneralError status;
+  ::mojo::PendingRemote<::chromeos::nnapi::canonical::mojom::IBurst> burst;
+  HANDLE_REMOTE_CALL_FAILURE(remote->configureExecutionBurst(&status, &burst),
+                             ErrorStatus::DEVICE_UNAVAILABLE);
+  if (!IS_OK(status.code)) {
+    return base::unexpected{status};
+  }
+  return SharedBurst{new android::nn::BurstStub(std::move(burst))};
 }
 
 std::any PreparedModelStub::getUnderlyingResource() const {
-  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "PreparedModelStub::getUnderlyingResource";
+  // TODO(jackshen): will implement it later
   return {};
 }
 

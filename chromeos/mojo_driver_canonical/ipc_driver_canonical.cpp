@@ -91,8 +91,7 @@ GeneralResult<SharedBuffer> IPCDriverCanonical::allocate(
     const std::vector<SharedPreparedModel>& preparedModels,
     const std::vector<BufferRole>& inputRoles,
     const std::vector<BufferRole>& outputRoles) const {
-  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "IPCDriverCanonical::allocate";
-  return delegate_->allocate(desc, preparedModels, inputRoles, outputRoles);
+  return NN_ERROR() << "IDevice::allocate is not supported.";
 }
 
 }  // namespace nn

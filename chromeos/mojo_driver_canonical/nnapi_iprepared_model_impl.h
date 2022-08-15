@@ -48,6 +48,9 @@ class IPreparedModelImpl
       const std::vector<ExtensionNameAndPrefix>& extensionNameToPrefix,
       executeFencedCallback callback) override;
 
+  void configureExecutionBurst(
+      configureExecutionBurstCallback callback) override;
+
  private:
   SharedPreparedModel wrapped_model_;
 };
