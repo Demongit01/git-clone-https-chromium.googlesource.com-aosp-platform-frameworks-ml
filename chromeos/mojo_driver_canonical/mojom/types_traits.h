@@ -548,16 +548,16 @@ struct UnionTraits<chromeos::nnapi::canonical::mojom::ExtraParams::DataView,
       android::nn::Operand::ExtraParams* out) {
     bool result = true;
     switch (input.tag()) {
-      case chromeos::nnapi::canonical::mojom::ExtraParams::Tag::NONE:
+      case chromeos::nnapi::canonical::mojom::ExtraParams::Tag::kNone:
         *out = std::monostate();
         break;
-      case chromeos::nnapi::canonical::mojom::ExtraParams::Tag::CHANNELQUANT: {
+      case chromeos::nnapi::canonical::mojom::ExtraParams::Tag::kChannelQuant: {
         android::nn::Operand::SymmPerChannelQuantParams params;
         result &= input.ReadChannelQuant(&params);
         *out = std::move(params);
         break;
       }
-      case chromeos::nnapi::canonical::mojom::ExtraParams::Tag::EXTENSION: {
+      case chromeos::nnapi::canonical::mojom::ExtraParams::Tag::kExtension: {
         std::vector<uint8_t> extension;
         result &= input.ReadExtension(&extension);
         *out = std::move(extension);
@@ -827,22 +827,22 @@ struct UnionTraits<chromeos::nnapi::canonical::mojom::NnMemory::DataView,
     bool result = true;
     auto memory = new android::nn::Memory{};
     switch (input.tag()) {
-      case chromeos::nnapi::canonical::mojom::NnMemory::Tag::ASHMEMHANDLE: {
+      case chromeos::nnapi::canonical::mojom::NnMemory::Tag::kAshmemHandle: {
         android::nn::Memory::Ashmem ashmem;
         result &= input.ReadAshmemHandle(&ashmem);
         memory->handle = std::move(ashmem);
         break;
       }
-      case chromeos::nnapi::canonical::mojom::NnMemory::Tag::FDHANDLE: {
+      case chromeos::nnapi::canonical::mojom::NnMemory::Tag::kFdHandle: {
         android::nn::Memory::Fd fd;
         result &= input.ReadFdHandle(&fd);
         memory->handle = std::move(fd);
         break;
       }
       case chromeos::nnapi::canonical::mojom::NnMemory::Tag::
-          HARDWAREBUFFERHANDLE:
+          kHardwareBufferHandle:
         break;
-      case chromeos::nnapi::canonical::mojom::NnMemory::Tag::UNKNOWNHANDLE: {
+      case chromeos::nnapi::canonical::mojom::NnMemory::Tag::kUnknownHandle: {
         android::nn::Memory::Unknown unknown;
         result &= input.ReadUnknownHandle(&unknown);
         memory->handle = std::move(unknown);
