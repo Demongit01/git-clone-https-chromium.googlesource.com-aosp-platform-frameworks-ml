@@ -290,5 +290,28 @@ GeneralResult<SharedPreparedModel> MojoControllerCanonical::prepareModel(
   return prepared_model_stub;
 }
 
+GeneralResult<SharedPreparedModel>
+MojoControllerCanonical::prepareModelFromCache(
+    OptionalTimePoint deadline,
+    const std::vector<SharedHandle>& modelCache,
+    const std::vector<SharedHandle>& dataCache,
+    const CacheToken& token) {
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
+      << "MojoControllerCanonical::prepareModelFromCache";
+  GeneralError status;
+  ::mojo::PendingRemote<chromeos::nnapi::canonical::mojom::IPreparedModel>
+      out_preparedModel;
+  HANDLE_REMOTE_CALL_FAILURE(
+      remote_->prepareModelFromCache(deadline, modelCache, dataCache, token,
+                                     &status, &out_preparedModel),
+      ErrorStatus::DEVICE_UNAVAILABLE);
+  if (!IS_OK(status.code)) {
+    return base::unexpected{status};
+  }
+  std::shared_ptr<IPreparedModel> prepared_model_stub{
+      new android::nn::PreparedModelStub(std::move(out_preparedModel))};
+  return prepared_model_stub;
+}
+
 }  // namespace nn
 }  // namespace android

@@ -96,5 +96,24 @@ void IDeviceImpl::prepareModel(
   std::move(callback).Run(kGeneralErrorNone, std::move(pm_remote));
 }
 
+void IDeviceImpl::prepareModelFromCache(
+    absl::optional<TimePoint> deadline,
+    const std::vector<SharedHandle>& modelCache,
+    const std::vector<SharedHandle>& dataCache,
+    CacheToken token,
+    prepareModelFromCacheCallback callback) {
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "IDeviceImpl::prepareModelFromCache";
+
+  auto result = wrapped_driver_->prepareModelFromCache(deadline, modelCache,
+                                                       dataCache, token);
+  HANDLE_ERROR_RESULT(result, callback, {});
+
+  mojo::PendingRemote<mojom::IPreparedModel> pm_remote;
+  mojo::MakeSelfOwnedReceiver(
+      std::make_unique<IPreparedModelImpl>(result.value()),
+      pm_remote.InitWithNewPipeAndPassReceiver());
+  std::move(callback).Run(kGeneralErrorNone, std::move(pm_remote));
+}
+
 }  // namespace nn
 }  // namespace android

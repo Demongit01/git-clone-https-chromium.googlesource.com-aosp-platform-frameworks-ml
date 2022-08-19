@@ -27,4 +27,8 @@ interface IDevice {
           array<TokenValuePair> hints,
           array<ExtensionNameAndPrefix> extensionNameToPrefix)
           => (GeneralError generalError, pending_remote<IPreparedModel>? preparedModel);
+  [Sync] prepareModelFromCache(
+          TimePoint? deadline, array<NnHandle> modelCache,
+          array<NnHandle> dataCache, CacheToken token)
+          => (GeneralError generalError, pending_remote<IPreparedModel>? preparedModel);
 };

@@ -47,6 +47,11 @@ class IDeviceImpl : public chromeos::nnapi::canonical::mojom::IDevice {
       const std::vector<TokenValuePair>& hints,
       const std::vector<ExtensionNameAndPrefix>& extensionNameToPrefix,
       prepareModelCallback callback) override;
+  void prepareModelFromCache(absl::optional<TimePoint> deadline,
+                             const std::vector<SharedHandle>& modelCache,
+                             const std::vector<SharedHandle>& dataCache,
+                             CacheToken token,
+                             prepareModelFromCacheCallback callback) override;
 
   SharedDevice wrapped_driver_;
 };

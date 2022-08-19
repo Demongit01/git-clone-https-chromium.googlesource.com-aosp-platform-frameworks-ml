@@ -80,9 +80,7 @@ GeneralResult<SharedPreparedModel> IPCDriverCanonical::prepareModelFromCache(
     const std::vector<SharedHandle>& modelCache,
     const std::vector<SharedHandle>& dataCache,
     const CacheToken& token) const {
-  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
-      << "IPCDriverCanonical::prepareModelFromCache";
-  return delegate_->prepareModelFromCache(deadline, modelCache, dataCache,
+  return mojo_->prepareModelFromCache(deadline, modelCache, dataCache,
                                           token);
 }
 

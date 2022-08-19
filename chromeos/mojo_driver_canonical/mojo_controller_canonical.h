@@ -47,6 +47,11 @@ class MojoControllerCanonical {
       const CacheToken& token,
       const std::vector<nn::TokenValuePair>& hints,
       const std::vector<nn::ExtensionNameAndPrefix>& extensionNameToPrefix);
+  GeneralResult<SharedPreparedModel> prepareModelFromCache(
+      OptionalTimePoint deadline,
+      const std::vector<SharedHandle>& modelCache,
+      const std::vector<SharedHandle>& dataCache,
+      const CacheToken& token);
 
  private:
   void SendMojoInvitationAndGetRemote(pid_t child_pid,
