@@ -8,6 +8,7 @@
 module chromeos.nnapi.canonical.mojom;
 
 import "aosp/frameworks/ml/chromeos/mojo_driver_canonical/mojom/IBurst.mojom";
+import "aosp/frameworks/ml/chromeos/mojo_driver_canonical/mojom/IExecution.mojom";
 import "aosp/frameworks/ml/chromeos/mojo_driver_canonical/mojom/Types.mojom";
 
 interface IPreparedModel {
@@ -25,9 +26,11 @@ interface IPreparedModel {
           array<ExtensionNameAndPrefix> extensionNameToPrefix)
           => (GeneralError status, SyncFence syncFence, pending_remote<IExecuteFencedInfoCallback> executionCallback);
 
-  [Sync] configureExecutionBurst() => (GeneralError status, pending_remote<IBurst> burst);
-};
+  [Sync] createReusableExecution(
+          Request request, MeasureTiming measure, Duration? loopTimeoutDuration,
+          array<TokenValuePair> hints,
+          array<ExtensionNameAndPrefix> extensionNameToPrefix)
+          => (GeneralError status, pending_remote<IExecution> execution);
 
-interface IExecuteFencedInfoCallback {
-  [Sync] getExecuteFencedInfo() => (GeneralError status, Timing timingLaunched, Timing timingFenced);
+  [Sync] configureExecutionBurst() => (GeneralError status, pending_remote<IBurst> burst);
 };

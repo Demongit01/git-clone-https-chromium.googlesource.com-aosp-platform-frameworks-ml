@@ -9,6 +9,7 @@
 #include "handle_error_canonical.h"
 #include "logger.h"
 #include "nnapi_iburst_impl.h"
+#include "nnapi_iexecution_impl.h"
 
 namespace android {
 namespace nn {
@@ -56,6 +57,24 @@ void IPreparedModelImpl::executeFenced(
       pm_remote.InitWithNewPipeAndPassReceiver());
   std::move(callback).Run(kGeneralErrorNone, result.value().first,
                           std::move(pm_remote));
+}
+
+void IPreparedModelImpl::createReusableExecution(
+    Request request,
+    MeasureTiming measure,
+    absl::optional<Duration> loopTimeoutDuration,
+    const std::vector<TokenValuePair>& hints,
+    const std::vector<ExtensionNameAndPrefix>& extensionNameToPrefix,
+    createReusableExecutionCallback callback) {
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
+      << "IPreparedModelImpl::createReusableExecution";
+  auto result = wrapped_model_->createReusableExecution(
+      request, measure, loopTimeoutDuration, hints, extensionNameToPrefix);
+  HANDLE_ERROR_RESULT(result, callback, {});
+  mojo::PendingRemote<mojom::IExecution> pm_remote;
+  mojo::MakeSelfOwnedReceiver(std::make_unique<IExecutionImpl>(result.value()),
+                              pm_remote.InitWithNewPipeAndPassReceiver());
+  std::move(callback).Run(kGeneralErrorNone, std::move(pm_remote));
 }
 
 void IPreparedModelImpl::configureExecutionBurst(

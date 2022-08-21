@@ -12,9 +12,6 @@
 #include <mojo/public/cpp/bindings/receiver.h>
 #include <mojo/public/cpp/bindings/receiver_set.h>
 
-#include "nnapi/IBurst.h"
-#include "utils/StrongPointer.h"
-
 // These classes will wrap the "real" HAL driver in the worker process
 // and receive the IPC calls from the client IPC driver in the
 // main application / NNAPI process. These are the implementation for

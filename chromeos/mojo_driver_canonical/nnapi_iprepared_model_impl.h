@@ -12,9 +12,6 @@
 #include <mojo/public/cpp/bindings/receiver.h>
 #include <mojo/public/cpp/bindings/receiver_set.h>
 
-#include "nnapi/Types.h"
-#include "utils/StrongPointer.h"
-
 // These classes will wrap the "real" HAL driver in the worker process
 // and receive the IPC calls from the client IPC driver in the
 // main application / NNAPI process. These are the implementation for
@@ -47,6 +44,14 @@ class IPreparedModelImpl
       const std::vector<TokenValuePair>& hints,
       const std::vector<ExtensionNameAndPrefix>& extensionNameToPrefix,
       executeFencedCallback callback) override;
+
+  void createReusableExecution(
+      Request request,
+      MeasureTiming measure,
+      absl::optional<Duration> loopTimeoutDuration,
+      const std::vector<TokenValuePair>& hints,
+      const std::vector<ExtensionNameAndPrefix>& extensionNameToPrefix,
+      createReusableExecutionCallback callback);
 
   void configureExecutionBurst(
       configureExecutionBurstCallback callback) override;

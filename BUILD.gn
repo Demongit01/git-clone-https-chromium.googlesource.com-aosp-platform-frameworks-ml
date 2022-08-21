@@ -179,6 +179,7 @@ generate_mojom_bindings("nnapi-mojo-canonical-bindings-lib") {
   sources = [
     "chromeos/mojo_driver_canonical/mojom/IBurst.mojom",
     "chromeos/mojo_driver_canonical/mojom/IDevice.mojom",
+    "chromeos/mojo_driver_canonical/mojom/IExecution.mojom",
     "chromeos/mojo_driver_canonical/mojom/IPreparedModel.mojom",
     "chromeos/mojo_driver_canonical/mojom/Types.mojom",
   ]
@@ -709,6 +710,7 @@ shared_library("mojo-driver-canonical") {
     "chromeos/mojo_driver_canonical/mojo_controller_canonical.cpp",
     "chromeos/mojo_driver_canonical/prepared_model_stub.cpp",
     "chromeos/mojo_driver_canonical/burst_stub.cpp",
+    "chromeos/mojo_driver_canonical/execution_stub.cpp",
   ]
   libs = [
     "pthread",
@@ -772,6 +774,7 @@ executable("nnapi_worker_canonical") {
     "chromeos/logger.cpp",
     "chromeos/mojo_driver_canonical/nnapi_iburst_impl.cpp",
     "chromeos/mojo_driver_canonical/nnapi_idevice_impl.cpp",
+    "chromeos/mojo_driver_canonical/nnapi_iexecution_impl.cpp",
     "chromeos/mojo_driver_canonical/nnapi_iprepared_model_impl.cpp",
     "chromeos/mojo_driver_canonical/worker_canonical.cpp",
     "chromeos/mojo_driver_canonical/worker_main_canonical.cpp",

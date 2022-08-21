@@ -7,6 +7,7 @@
 #include <mojo/public/cpp/bindings/self_owned_receiver.h>
 
 #include "burst_stub.h"
+#include "execution_stub.h"
 #include "handle_error_canonical.h"
 #include "logger.h"
 
@@ -147,8 +148,20 @@ GeneralResult<SharedExecution> PreparedModelStub::createReusableExecution(
     const std::vector<nn::TokenValuePair>& hints,
     const std::vector<nn::ExtensionNameAndPrefix>& extensionNameToPrefix)
     const {
-  return NN_ERROR()
-         << "IPreparedModel::createReusableExecution is not supported.";
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
+      << "PreparedModelStub::createReusableExecution";
+  auto remote = mojo::Remote<mojom::IPreparedModel>(std::move(pending_remote_));
+  android::nn::GeneralError status;
+  ::mojo::PendingRemote<::chromeos::nnapi::canonical::mojom::IExecution>
+      execution;
+  HANDLE_REMOTE_CALL_FAILURE(remote->createReusableExecution(
+                                 request, measure, loopTimeoutDuration, hints,
+                                 extensionNameToPrefix, &status, &execution),
+                             ErrorStatus::DEVICE_UNAVAILABLE);
+  if (!IS_OK(status.code)) {
+    return base::unexpected{status};
+  }
+  return SharedExecution{new android::nn::ExecutionStub(std::move(execution))};
 }
 
 GeneralResult<SharedBurst> PreparedModelStub::configureExecutionBurst() const {
@@ -166,7 +179,8 @@ GeneralResult<SharedBurst> PreparedModelStub::configureExecutionBurst() const {
 }
 
 std::any PreparedModelStub::getUnderlyingResource() const {
-  // TODO(jackshen): will implement it later
+  LOG(FATAL) << "PreparedModelStub::getUnderlyingResource should not be called "
+                "since IDevice::allocate is not supported by ipc driver.";
   return {};
 }
 

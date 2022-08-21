@@ -400,4 +400,8 @@ struct SyncFence {
   NnHandle mSyncFence;
 };
 
-// version 3
+interface IExecuteFencedInfoCallback {
+  [Sync] getExecuteFencedInfo() => (GeneralError status, Timing timingLaunched, Timing timingFenced);
+};
+
+// version 5
