@@ -104,14 +104,14 @@ PreparedModelStub::executeFencedInternal(
   }
   auto remote = mojo::Remote<mojom::IPreparedModel>(std::move(pending_remote_));
   android::nn::GeneralError status;
-  android::nn::SyncFence syncFence;
+  absl::optional<android::nn::SyncFence> opt_fence;
   ::mojo::PendingRemote<
       chromeos::nnapi::canonical::mojom::IExecuteFencedInfoCallback>
       callback;
   HANDLE_REMOTE_CALL_FAILURE(
       remote->executeFenced(request, waitFor, measure, deadline,
                             loopTimeoutDuration, timeoutDurationAfterFence,
-                            hints, extensionNameToPrefix, &status, &syncFence,
+                            hints, extensionNameToPrefix, &status, &opt_fence,
                             &callback),
       ErrorStatus::DEVICE_UNAVAILABLE);
   pending_remote_ = remote.Unbind();
@@ -123,6 +123,7 @@ PreparedModelStub::executeFencedInternal(
   }
   ExecuteFencedInfoCallback callback_stub =
       [&callback]() -> GeneralResult<std::pair<Timing, Timing>> {
+    VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "ExecuteFencedInfoCallback started.";
     auto remote = mojo::Remote<
         chromeos::nnapi::canonical::mojom::IExecuteFencedInfoCallback>(
         std::move(callback));
@@ -135,10 +136,14 @@ PreparedModelStub::executeFencedInternal(
     if (!IS_OK(status.code)) {
       return base::unexpected{status};
     }
+    VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "ExecuteFencedInfoCallback finished.";
     return std::pair<Timing, Timing>{timingLaunched, timingFenced};
   };
-  return std::pair<SyncFence, ExecuteFencedInfoCallback>{syncFence,
-                                                         callback_stub};
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
+      << "PreparedModelStub::executeFenced finished.";
+  return std::pair<SyncFence, ExecuteFencedInfoCallback>{
+      opt_fence.has_value() ? opt_fence.value() : android::nn::SyncFence{},
+      callback_stub};
 }
 
 GeneralResult<SharedExecution> PreparedModelStub::createReusableExecution(

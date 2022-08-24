@@ -55,8 +55,13 @@ void IPreparedModelImpl::executeFenced(
   mojo::MakeSelfOwnedReceiver(
       std::make_unique<IExecuteFencedInfoCallbackImpl>(result.value().second),
       pm_remote.InitWithNewPipeAndPassReceiver());
-  std::move(callback).Run(kGeneralErrorNone, result.value().first,
-                          std::move(pm_remote));
+  // PrepareModel implmentation might return a SyncFence with a nullptr handle
+  absl::optional<SyncFence> opt_fence =
+      result.value().first.hasFd() ? absl::make_optional(result.value().first)
+                                   : absl::nullopt;
+  std::move(callback).Run(kGeneralErrorNone, opt_fence, std::move(pm_remote));
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
+      << "IPreparedModelImpl::executeFenced finished.";
 }
 
 void IPreparedModelImpl::createReusableExecution(

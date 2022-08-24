@@ -24,7 +24,7 @@ interface IPreparedModel {
           TimePoint? deadline, Duration? loopTimeoutDuration, Duration? timeoutDurationAfterFence,
           array<TokenValuePair> hints,
           array<ExtensionNameAndPrefix> extensionNameToPrefix)
-          => (GeneralError status, SyncFence syncFence, pending_remote<IExecuteFencedInfoCallback> executionCallback);
+          => (GeneralError status, SyncFence? syncFence, pending_remote<IExecuteFencedInfoCallback> executionCallback);
 
   [Sync] createReusableExecution(
           Request request, MeasureTiming measure, Duration? loopTimeoutDuration,
