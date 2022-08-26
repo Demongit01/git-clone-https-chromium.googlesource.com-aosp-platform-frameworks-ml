@@ -30,6 +30,9 @@ namespace {
 
 template <typename T>
 void CopyMultipleTimes(const T* in_data, int32_t in_size, int32_t multiplier, T* out_data) {
+    CHECK(in_size >= 0);
+    CHECK(out_data != nullptr);
+
     for (int i = 0; i < multiplier; ++i) {
         const T* in_end = in_data + in_size;
         T* new_out_data = std::copy(in_data, in_end, out_data);
@@ -68,20 +71,21 @@ template <typename T>
 bool tileImpl(const T* inputData, const Shape& inputShape, const int32_t* multiples, T* outputData,
               const Shape& /*outputShape*/) {
     int64_t overflowCheck = static_cast<int64_t>(inputShape.dimensions[0]) * static_cast<int64_t>(multiples[0]);
-    NN_CHECK((overflowCheck > INT_MIN) && (overflowCheck < INT_MAX));
+    NN_RET_CHECK((overflowCheck > INT_MIN) && (overflowCheck < INT_MAX));
     TileOneDimension(inputShape, inputData, multiples, outputData, 0);
     return true;
 }
 
 }  // namespace
 
-bool prepare(const Shape& input, const int32_t* multiples, const Shape& /*multiplesShape*/,
+bool prepare(const Shape& input, const int32_t* multiples, const Shape& multiplesShape,
              Shape* output) {
     output->type = input.type;
     output->offset = input.offset;
     output->scale = input.scale;
 
     output->dimensions.assign(input.dimensions.begin(), input.dimensions.end());
+    NN_RET_CHECK(output->dimensions.size() == getNumberOfElements(multiplesShape));
     for (size_t i = 0; i < output->dimensions.size(); ++i) {
         output->dimensions[i] *= multiples[i];
     }
