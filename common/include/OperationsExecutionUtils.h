@@ -69,7 +69,9 @@ class IOperationExecutionContext {
 
     template <typename T>
     T getInputValue(uint32_t index) const {
-        return getInputBuffer<T>(index)[0];
+        auto buf = getInputBuffer<T>(index);
+        CHECK(buf != nullptr);
+        return buf[0];
     }
 };
 
