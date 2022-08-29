@@ -153,8 +153,8 @@ bool addQuant8(const T* in1, const Shape& shape1, const T* in2, const Shape& sha
     NN_RET_CHECK(QuantizeMultiplierSmallerThanOneExp(real_output_multiplier, &output_multiplier,
                                                      &output_shift));
 
-    int32_t output_activation_min;
-    int32_t output_activation_max;
+    int32_t output_activation_min = 0;
+    int32_t output_activation_max = 0;
     constexpr bool isSignedOp = std::is_same<T, int8_t>::value;
     if constexpr (isSignedOp) {
         CalculateActivationRangeInt8(activation, shapeOut, &output_activation_min,
@@ -245,7 +245,7 @@ bool mulFloat32(const float* in1, const Shape& shape1, const float* in2, const S
         ANDROID_NN_MACRO_DISPATCH(ANDROID_NN_BROADCAST_MUL)
 #undef ANDROID_NN_BROADCAST_MUL
     } else {
-        float output_activation_min, output_activation_max;
+        float output_activation_min = 0, output_activation_max = 0;
         CalculateActivationRangeFloat(activation, &output_activation_min, &output_activation_max);
 
         NNTRACE_COMP_SWITCH("optimized_ops::Mul");
@@ -278,8 +278,8 @@ bool mulQuant8(const T* in1, const Shape& shape1, const T* in2, const Shape& sha
                                                      &output_shift));
 
     constexpr bool isSignedOp = std::is_same<T, int8_t>::value;
-    int32_t output_activation_min;
-    int32_t output_activation_max;
+    int32_t output_activation_min = 0;
+    int32_t output_activation_max = 0;
     if constexpr (isSignedOp) {
         CalculateActivationRangeInt8(activation, shapeOut, &output_activation_min,
                                      &output_activation_max);
@@ -319,7 +319,7 @@ bool subFloat32(const float* in1, const Shape& shape1, const float* in2, const S
                                out, convertShapeToDims(shapeOut));
 
     // TFLite does not apply activation to broadcast sub.
-    float output_activation_min, output_activation_max;
+    float output_activation_min = 0, output_activation_max = 0;
     CalculateActivationRangeFloat(activation, &output_activation_min, &output_activation_max);
     uint32_t numOutputElements = getNumberOfElements(shapeOut);
     for (uint32_t i = 0; i < numOutputElements; i++) {
@@ -366,8 +366,8 @@ bool subQuant8(const T* in1, const Shape& shape1, const T* in2, const Shape& sha
                                                      &output_shift));
 
     constexpr bool isSignedOp = std::is_same<T, int8_t>::value;
-    int32_t output_activation_min;
-    int32_t output_activation_max;
+    int32_t output_activation_min = 0;
+    int32_t output_activation_max = 0;
     if constexpr (isSignedOp) {
         CalculateActivationRangeInt8(activation, shapeOut, &output_activation_min,
                                      &output_activation_max);
@@ -410,7 +410,7 @@ bool subQuant8(const T* in1, const Shape& shape1, const T* in2, const Shape& sha
 bool divFloat32(const float* in1, const Shape& shape1, const float* in2, const Shape& shape2,
                 int32_t activation, float* out, const Shape& shapeOut) {
     NNTRACE_TRANS("divFloat32");
-    float output_activation_min, output_activation_max;
+    float output_activation_min = 0, output_activation_max = 0;
     CalculateActivationRangeFloat(activation, &output_activation_min, &output_activation_max);
 
     bool needBroadcast = !SameShape(shape1, shape2);

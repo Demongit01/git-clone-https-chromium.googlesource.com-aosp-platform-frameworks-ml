@@ -136,7 +136,7 @@ bool depthwiseConvNhwc(const float* inputData, const Shape& inputShape, const fl
 
     ANDROID_NN_DEPTHWISE_CONV_PARAMETERS
 
-    float output_activation_min, output_activation_max;
+    float output_activation_min = 0, output_activation_max = 0;
     CalculateActivationRangeFloat(activation, &output_activation_min, &output_activation_max);
 
     tflite::DepthwiseParams params{

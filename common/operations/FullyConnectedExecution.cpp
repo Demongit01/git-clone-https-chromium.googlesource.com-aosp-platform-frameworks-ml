@@ -53,7 +53,7 @@ bool fullyConnectedFloat32(const float* inputData, const Shape& inputShape,
                            const float* biasData, const Shape& biasShape, int32_t activation,
                            float* outputData, const Shape& outputShape) {
     NNTRACE_TRANS("fullyConnectedFloat32");
-    float output_activation_min, output_activation_max;
+    float output_activation_min = 0, output_activation_max = 0;
     CalculateActivationRangeFloat(activation, &output_activation_min, &output_activation_max);
 
     // b/80425683, optimized implementation produces incorrect results when the

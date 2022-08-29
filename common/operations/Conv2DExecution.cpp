@@ -197,7 +197,7 @@ bool convNhwc(const float* inputData, const Shape& inputShape, const float* filt
 
     ANDROID_NN_CONV_PARAMETERS(float)
 
-    float output_activation_min, output_activation_max;
+    float output_activation_min = 0, output_activation_max = 0;
     CalculateActivationRangeFloat(activation, &output_activation_min, &output_activation_max);
 
     // Prevent concurrent executions that may access the scratch buffer.

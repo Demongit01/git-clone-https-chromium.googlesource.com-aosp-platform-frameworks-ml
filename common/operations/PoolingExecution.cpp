@@ -129,7 +129,7 @@ struct PoolingParam {
             params.quantized_activation_min = output_activation_min;
             params.quantized_activation_max = output_activation_max;
         } else {
-            float output_activation_min, output_activation_max;
+            float output_activation_min = 0, output_activation_max = 0;
             CalculateActivationRangeFloat(activation, &output_activation_min,
                                           &output_activation_max);
             params.float_activation_min = output_activation_min;
