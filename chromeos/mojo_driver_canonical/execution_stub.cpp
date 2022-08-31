@@ -6,6 +6,7 @@
 
 #include <mojo/public/cpp/bindings/self_owned_receiver.h>
 
+#include "callbacks_stub.h"
 #include "handle_error_canonical.h"
 #include "logger.h"
 
@@ -17,18 +18,26 @@ using namespace chromeos::nnapi::canonical;
 ExecutionResult<std::pair<std::vector<OutputShape>, Timing>>
 ExecutionStub::compute(const OptionalTimePoint& deadline) const {
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "ExecutionStub::compute";
-  auto remote = mojo::Remote<mojom::IExecution>(std::move(pending_remote_));
-  android::nn::ExecutionError status;
-  std::vector<android::nn::OutputShape> outputShape;
-  android::nn::Timing timing;
+  ExecutionError status;
+  std::vector<OutputShape> outputShape;
+  Timing timing;
+  auto remote_call = [&deadline](mojo::Remote<mojom::IExecution>& remote,
+                                 mojom::IExecution::computeCallback cb) {
+    remote->compute(deadline, std::move(cb));
+  };
+  auto callback = FullOutputCallback<ExecutionError, std::vector<OutputShape>,
+                                     Timing, ExecutionError,
+                                     const std::vector<OutputShape>&, Timing>;
   HANDLE_REMOTE_CALL_FAILURE(
-      remote->compute(deadline, &status, &outputShape, &timing),
+      CallRemote(task_runner_, remote_, std::move(remote_call),
+                 std::move(callback), std::ref(status), std::ref(outputShape),
+                 std::ref(timing)),
       ErrorStatus::DEVICE_UNAVAILABLE);
-  pending_remote_ = remote.Unbind();
-  if (!IS_OK(status.code)) {
-    return base::unexpected{status};
-  }
-  return std::pair<std::vector<OutputShape>, Timing>{outputShape, timing};
+  return IS_OK(status.code)
+             ? ExecutionResult<
+                   std::pair<std::vector<OutputShape>, Timing>>{{outputShape,
+                                                                 timing}}
+             : base::unexpected{status};
 }
 
 GeneralResult<std::pair<SyncFence, ExecuteFencedInfoCallback>>
@@ -37,38 +46,35 @@ ExecutionStub::computeFenced(
     const OptionalTimePoint& deadline,
     const OptionalDuration& timeoutDurationAfterFence) const {
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "ExecutionStub::computeFenced";
-  auto remote = mojo::Remote<mojom::IExecution>(std::move(pending_remote_));
-  android::nn::GeneralError status;
-  android::nn::SyncFence syncFence;
-  ::mojo::PendingRemote<
-      chromeos::nnapi::canonical::mojom::IExecuteFencedInfoCallback>
-      callback;
+
+  GeneralError status;
+  absl::optional<SyncFence> opt_fence;
+  ::mojo::PendingRemote<mojom::IExecuteFencedInfoCallback> fenced_info;
+  auto remote_call = [&waitFor, &deadline, &timeoutDurationAfterFence](
+                         mojo::Remote<mojom::IExecution>& remote,
+                         mojom::IExecution::computeFencedCallback cb) {
+    remote->computeFenced(waitFor, deadline, timeoutDurationAfterFence,
+                          std::move(cb));
+  };
+  auto callback = DefaultOutputCallback<
+      GeneralError, absl::optional<SyncFence>,
+      ::mojo::PendingRemote<mojom::IExecuteFencedInfoCallback>>;
   HANDLE_REMOTE_CALL_FAILURE(
-      remote->computeFenced(waitFor, deadline, timeoutDurationAfterFence,
-                            &status, &syncFence, &callback),
+      CallRemote(task_runner_, remote_, std::move(remote_call),
+                 std::move(callback), std::ref(status), std::ref(opt_fence),
+                 std::ref(fenced_info)),
       ErrorStatus::DEVICE_UNAVAILABLE);
-  pending_remote_ = remote.Unbind();
+
   if (!IS_OK(status.code)) {
     return base::unexpected{status};
   }
-  ExecuteFencedInfoCallback callback_stub =
-      [&callback]() -> GeneralResult<std::pair<Timing, Timing>> {
-    auto remote = mojo::Remote<
-        chromeos::nnapi::canonical::mojom::IExecuteFencedInfoCallback>(
-        std::move(callback));
-    android::nn::GeneralError status;
-    android::nn::Timing timingLaunched;
-    android::nn::Timing timingFenced;
-    HANDLE_REMOTE_CALL_FAILURE(
-        remote->getExecuteFencedInfo(&status, &timingLaunched, &timingFenced),
-        ErrorStatus::DEVICE_UNAVAILABLE);
-    if (!IS_OK(status.code)) {
-      return base::unexpected{status};
-    }
-    return std::pair<Timing, Timing>{timingLaunched, timingFenced};
+  auto callback_stub = std::make_shared<ExecuteFencedInfoCallbackStub>(
+      std::move(fenced_info), task_runner_);
+  ExecuteFencedInfoCallback cb = [callback_stub]() {
+    return callback_stub->getExecuteFencedInfo();
   };
-  return std::pair<SyncFence, ExecuteFencedInfoCallback>{syncFence,
-                                                         callback_stub};
+  return std::pair<SyncFence, ExecuteFencedInfoCallback>{
+      opt_fence.has_value() ? opt_fence.value() : SyncFence{}, cb};
 }
 
 }  // namespace nn

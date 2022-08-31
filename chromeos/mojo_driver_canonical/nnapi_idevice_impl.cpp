@@ -83,17 +83,21 @@ void IDeviceImpl::prepareModel(
     const std::vector<ExtensionNameAndPrefix>& extensionNameToPrefix,
     prepareModelCallback callback) {
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "IDeviceImpl::prepareModel";
-
   auto result = wrapped_driver_->prepareModel(
       model, preference, priority, deadline, modelCache, dataCache, token,
       hints, extensionNameToPrefix);
-  HANDLE_ERROR_RESULT(result, callback, {});
-
   mojo::PendingRemote<mojom::IPreparedModel> pm_remote;
+  if (!result.ok()) {
+    mojo::MakeSelfOwnedReceiver(std::make_unique<IPreparedModelImpl>(nullptr),
+                                pm_remote.InitWithNewPipeAndPassReceiver());
+    std::move(callback).Run(result.error(), std::move(pm_remote));
+    return;
+  }
   mojo::MakeSelfOwnedReceiver(
       std::make_unique<IPreparedModelImpl>(result.value()),
       pm_remote.InitWithNewPipeAndPassReceiver());
   std::move(callback).Run(kGeneralErrorNone, std::move(pm_remote));
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "IDeviceImpl::prepareModel finished";
 }
 
 void IDeviceImpl::prepareModelFromCache(
@@ -103,16 +107,20 @@ void IDeviceImpl::prepareModelFromCache(
     CacheToken token,
     prepareModelFromCacheCallback callback) {
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "IDeviceImpl::prepareModelFromCache";
-
   auto result = wrapped_driver_->prepareModelFromCache(deadline, modelCache,
                                                        dataCache, token);
-  HANDLE_ERROR_RESULT(result, callback, {});
-
   mojo::PendingRemote<mojom::IPreparedModel> pm_remote;
+  if (!result.ok()) {
+    mojo::MakeSelfOwnedReceiver(std::make_unique<IPreparedModelImpl>(nullptr),
+                                pm_remote.InitWithNewPipeAndPassReceiver());
+    std::move(callback).Run(result.error(), std::move(pm_remote));
+    return;
+  }
   mojo::MakeSelfOwnedReceiver(
       std::make_unique<IPreparedModelImpl>(result.value()),
       pm_remote.InitWithNewPipeAndPassReceiver());
   std::move(callback).Run(kGeneralErrorNone, std::move(pm_remote));
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "IDeviceImpl::prepareModelFromCache finished";
 }
 
 }  // namespace nn

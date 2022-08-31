@@ -10,6 +10,7 @@ namespace nnapi {
 
 #define HANDLE_REMOTE_CALL_FAILURE(re, status)                     \
   if (!(re)) {                                                     \
+    LOG(ERROR) << "Remote call to the mojo service failed.";       \
     NN_ERROR(status) << "Remote call to the mojo service failed."; \
   }
 

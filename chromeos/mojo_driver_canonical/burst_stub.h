@@ -14,6 +14,7 @@
 #include "aosp/frameworks/ml/chromeos/mojo_driver_canonical/mojom/IBurst.mojom.h"
 #include "nnapi/IBurst.h"
 #include "nnapi/Types.h"
+#include "remote_call.h"
 
 // These classes are stub implementations of the NNAPI HAL
 // interfaces which wrap around a Mojo remote. They are needed
@@ -22,10 +23,13 @@
 namespace android {
 namespace nn {
 
-class BurstStub : public IBurst {
+class BurstStub : public IBurst,
+                  public HasRemote<chromeos::nnapi::canonical::mojom::IBurst> {
  public:
-  BurstStub(mojo::PendingRemote<chromeos::nnapi::canonical::mojom::IBurst> pm)
-      : pending_remote_(std::move(pm)) {}
+  BurstStub(mojo::PendingRemote<chromeos::nnapi::canonical::mojom::IBurst>
+                pending_remote,
+            scoped_refptr<::base::SequencedTaskRunner>& task_runner)
+      : HasRemote(std::move(pending_remote), task_runner) {}
 
   OptionalCacheHold cacheMemory(const SharedMemory& memory) const;
 
@@ -47,9 +51,6 @@ class BurstStub : public IBurst {
       const;
 
  private:
-  mutable mojo::PendingRemote<chromeos::nnapi::canonical::mojom::IBurst>
-      pending_remote_;
-
   ExecutionResult<std::pair<std::vector<OutputShape>, Timing>> executeInternal(
       const Request& request,
       MeasureTiming measure,

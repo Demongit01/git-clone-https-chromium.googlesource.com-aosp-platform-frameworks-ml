@@ -22,11 +22,10 @@ IBurst::OptionalCacheHold BurstStub::cacheMemory(
 ExecutionResult<std::pair<std::vector<OutputShape>, Timing>> BurstStub::execute(
     const Request& request,
     MeasureTiming measure,
-    const nn::OptionalTimePoint& deadline,
-    const nn::OptionalDuration& loopTimeoutDuration,
-    const std::vector<nn::TokenValuePair>& hints,
-    const std::vector<nn::ExtensionNameAndPrefix>& extensionNameToPrefix)
-    const {
+    const OptionalTimePoint& deadline,
+    const OptionalDuration& loopTimeoutDuration,
+    const std::vector<TokenValuePair>& hints,
+    const std::vector<ExtensionNameAndPrefix>& extensionNameToPrefix) const {
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "BurstStub::execute";
   // Ensure that request is ready for IPC.
   std::optional<Request> maybeRequestInShared;
@@ -51,31 +50,40 @@ BurstStub::executeInternal(
   if (relocation.input) {
     relocation.input->flush();
   }
-  auto remote = mojo::Remote<mojom::IBurst>(std::move(pending_remote_));
-  android::nn::ExecutionError status;
-  std::vector<android::nn::OutputShape> outputShape;
-  android::nn::Timing timing;
+  ExecutionError status;
+  std::vector<OutputShape> output_shapes;
+  Timing timing;
+  auto remote_call = [&request, &measure, &deadline, &loopTimeoutDuration,
+                      &hints, &extensionNameToPrefix](
+                         mojo::Remote<mojom::IBurst>& remote,
+                         mojom::IBurst::executeCallback cb) {
+    remote->execute(request, measure, deadline, loopTimeoutDuration, hints,
+                    extensionNameToPrefix, std::move(cb));
+  };
+  auto callback = FullOutputCallback<ExecutionError, std::vector<OutputShape>,
+                                     Timing, ExecutionError,
+                                     const std::vector<OutputShape>&, Timing>;
   HANDLE_REMOTE_CALL_FAILURE(
-      remote->execute(request, measure, deadline, loopTimeoutDuration, hints,
-                      extensionNameToPrefix, &status, &outputShape, &timing),
+      CallRemote(task_runner_, remote_, std::move(remote_call),
+                 std::move(callback), std::ref(status), std::ref(output_shapes),
+                 std::ref(timing)),
       ErrorStatus::DEVICE_UNAVAILABLE);
-  pending_remote_ = remote.Unbind();
   if (relocation.output) {
     relocation.output->flush();
   }
-  if (!IS_OK(status.code)) {
-    return base::unexpected{status};
-  }
-  return std::pair<std::vector<OutputShape>, Timing>{outputShape, timing};
+  return IS_OK(status.code)
+             ? ExecutionResult<
+                   std::pair<std::vector<OutputShape>, Timing>>{{output_shapes,
+                                                                 timing}}
+             : base::unexpected{status};
 }
 
 GeneralResult<SharedExecution> BurstStub::createReusableExecution(
     const Request& request,
     MeasureTiming measure,
-    const nn::OptionalDuration& loopTimeoutDuration,
-    const std::vector<nn::TokenValuePair>& hints,
-    const std::vector<nn::ExtensionNameAndPrefix>& extensionNameToPrefix)
-    const {
+    const OptionalDuration& loopTimeoutDuration,
+    const std::vector<TokenValuePair>& hints,
+    const std::vector<ExtensionNameAndPrefix>& extensionNameToPrefix) const {
   return NN_ERROR() << "IBurst::createReusableExecution is not supported!";
 }
 

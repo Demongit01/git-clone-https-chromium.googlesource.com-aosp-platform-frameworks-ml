@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ML_NN_CHROMEOS_NNAPI_WRAPPERS_H_
-#define ML_NN_CHROMEOS_NNAPI_WRAPPERS_H_
+#ifndef ML_NN_CHROMEOS_NNAPI_PREPARED_MODEL_STUB_H_
+#define ML_NN_CHROMEOS_NNAPI_PREPARED_MODEL_STUB_H_
 
 #include <base/memory/weak_ptr.h>
 #include <mojo/public/cpp/bindings/pending_receiver.h>
@@ -13,6 +13,7 @@
 #include "SharedMemory.h"
 #include "aosp/frameworks/ml/chromeos/mojo_driver_canonical/mojom/IPreparedModel.mojom.h"
 #include "nnapi/IPreparedModel.h"
+#include "remote_call.h"
 
 // These classes are stub implementations of the NNAPI HAL
 // interfaces which wrap around a Mojo remote. They are needed
@@ -21,20 +22,15 @@
 namespace android {
 namespace nn {
 
-class HasSequencedTaskRunner {
- public:
-  HasSequencedTaskRunner()
-      : task_runner_{::base::SequencedTaskRunnerHandle::Get()} {}
-
- protected:
-  scoped_refptr<::base::SequencedTaskRunner> task_runner_;
-};
-
-class PreparedModelStub : public IPreparedModel, public HasSequencedTaskRunner {
+class PreparedModelStub
+    : public IPreparedModel,
+      public HasRemote<chromeos::nnapi::canonical::mojom::IPreparedModel> {
  public:
   PreparedModelStub(
-      mojo::PendingRemote<chromeos::nnapi::canonical::mojom::IPreparedModel> pm)
-      : pending_remote_(std::move(pm)) {}
+      mojo::PendingRemote<chromeos::nnapi::canonical::mojom::IPreparedModel>
+          pending_remote,
+      scoped_refptr<::base::SequencedTaskRunner>& task_runner)
+      : HasRemote(std::move(pending_remote), task_runner) {}
 
   ExecutionResult<std::pair<std::vector<OutputShape>, Timing>> execute(
       const Request& request,
@@ -69,9 +65,6 @@ class PreparedModelStub : public IPreparedModel, public HasSequencedTaskRunner {
   std::any getUnderlyingResource() const override;
 
  private:
-  mutable mojo::PendingRemote<chromeos::nnapi::canonical::mojom::IPreparedModel>
-      pending_remote_;
-
   ExecutionResult<std::pair<std::vector<OutputShape>, Timing>> executeInternal(
       const Request& request,
       MeasureTiming measure,
@@ -97,4 +90,4 @@ class PreparedModelStub : public IPreparedModel, public HasSequencedTaskRunner {
 }  // namespace nn
 }  // namespace android
 
-#endif  // ML_NN_CHROMEOS_NNAPI_WRAPPERS_H_
+#endif  // ML_NN_CHROMEOS_NNAPI_PREPARED_MODEL_STUB_H_

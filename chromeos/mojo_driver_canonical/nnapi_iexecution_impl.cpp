@@ -34,13 +34,21 @@ void IExecutionImpl::computeFenced(
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "IExecutionImpl::compute";
   auto result = wrapped_execution_->computeFenced(waitFor, deadline,
                                                   timeoutDurationAfterFence);
-  HANDLE_ERROR_RESULT(result, callback, {}, {});
   mojo::PendingRemote<mojom::IExecuteFencedInfoCallback> pm_remote;
+  if (!result.ok()) {
+    mojo::MakeSelfOwnedReceiver(
+        std::make_unique<IExecuteFencedInfoCallbackImpl>(nullptr),
+        pm_remote.InitWithNewPipeAndPassReceiver());
+    std::move(callback).Run(result.error(), {}, std::move(pm_remote));
+    return;
+  }
   mojo::MakeSelfOwnedReceiver(
       std::make_unique<IExecuteFencedInfoCallbackImpl>(result.value().second),
       pm_remote.InitWithNewPipeAndPassReceiver());
-  std::move(callback).Run(kGeneralErrorNone, result.value().first,
-                          std::move(pm_remote));
+  absl::optional<SyncFence> opt_fence =
+      result.value().first.hasFd() ? absl::make_optional(result.value().first)
+                                   : absl::nullopt;
+  std::move(callback).Run(kGeneralErrorNone, opt_fence, std::move(pm_remote));
 }
 
 }  // namespace nn

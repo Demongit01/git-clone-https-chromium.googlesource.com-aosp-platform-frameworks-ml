@@ -401,7 +401,5 @@ struct SyncFence {
 };
 
 interface IExecuteFencedInfoCallback {
-  [Sync] getExecuteFencedInfo() => (GeneralError status, Timing timingLaunched, Timing timingFenced);
+  getExecuteFencedInfo() => (GeneralError status, Timing timingLaunched, Timing timingFenced);
 };
-
-// version 5

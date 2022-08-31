@@ -10,9 +10,9 @@ module chromeos.nnapi.canonical.mojom;
 import "aosp/frameworks/ml/chromeos/mojo_driver_canonical/mojom/Types.mojom";
 
 interface IExecution {
-  [Sync] compute(TimePoint? deadline)
+  compute(TimePoint? deadline)
           => (ExecutionError executionError, array<OutputShape> outputShape, Timing timing);
-  [Sync] computeFenced(array<SyncFence> waitFor, TimePoint? deadline,
+  computeFenced(array<SyncFence> waitFor, TimePoint? deadline,
                        Duration? timeoutDurationAfterFence)
-          => (GeneralError status, SyncFence syncFence, pending_remote<IExecuteFencedInfoCallback> executionCallback);
+          => (GeneralError status, SyncFence? syncFence, pending_remote<IExecuteFencedInfoCallback> executionCallback);
 };

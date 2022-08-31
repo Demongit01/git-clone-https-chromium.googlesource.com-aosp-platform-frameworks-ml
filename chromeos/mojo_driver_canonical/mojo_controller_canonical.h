@@ -27,7 +27,10 @@ class MojoThread;
 // done upon construction.
 class MojoControllerCanonical {
  public:
-  MojoControllerCanonical(const std::string service_name = "default");
+  MojoControllerCanonical(
+      scoped_refptr<::base::SequencedTaskRunner> task_runner,
+      const std::string service_name = "default");
+  ~MojoControllerCanonical();
 
   Capabilities getCapabilities();
   std::string getVersionString();
@@ -61,8 +64,8 @@ class MojoControllerCanonical {
                                    std::string pipe_name,
                                    pid_t* worker_pid);
 
+  scoped_refptr<::base::SequencedTaskRunner> task_runner_;
   const std::string service_name_;
-  scoped_refptr<::base::SequencedTaskRunner> ipc_task_runner_;
   mojo::Remote<chromeos::nnapi::canonical::mojom::IDevice> remote_;
 };
 

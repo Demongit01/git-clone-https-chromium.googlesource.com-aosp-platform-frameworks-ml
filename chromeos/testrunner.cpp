@@ -48,7 +48,6 @@ int main(int argc, char** argv) {
   testing::InitGoogleMock(&argc, argv);
 
   int test_result = RUN_ALL_TESTS();
-
   DestroyMessageLoop();
 
   // Clean up the fake cryptohome area

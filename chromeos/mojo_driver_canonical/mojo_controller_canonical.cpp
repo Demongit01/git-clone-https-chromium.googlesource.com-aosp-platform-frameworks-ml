@@ -5,14 +5,9 @@
 #include "mojo_controller_canonical.h"
 
 #include <base/logging.h>
-#include <base/no_destructor.h>
 #include <base/strings/stringprintf.h>
-#include <base/task/current_thread.h>
-#include <base/task/task_traits.h>
 #include <base/unguessable_token.h>
-#include <brillo/message_loops/base_message_loop.h>
 #include <libminijail.h>
-#include <mojo/core/embedder/embedder.h>
 #include <mojo/public/cpp/bindings/remote.h>
 #include <mojo/public/cpp/bindings/self_owned_receiver.h>
 #include <mojo/public/cpp/system/invitation.h>
@@ -22,61 +17,17 @@
 #include "handle_error_canonical.h"
 #include "logger.h"
 #include "prepared_model_stub.h"
+#include "remote_call.h"
 
 namespace android {
 namespace nn {
 
-using namespace chromeos::nnapi;
+using namespace chromeos::nnapi::canonical;
 
-class MojoThread {
- public:
-  // This MojoThread should be used as singleton, the reason for this
-  // constructor being public is the base::NoDestructor<> needs a public
-  // constructor.
-  MojoThread();
-
-  MojoThread(MojoThread const&) = delete;
-  void operator=(MojoThread const&) = delete;
-
-  static MojoThread& Get();
-
-  scoped_refptr<::base::SingleThreadTaskRunner>& GetIpcTaskRunner();
-
- private:
-  std::unique_ptr<::base::Thread> ipc_thread_;
-  std::unique_ptr<mojo::core::ScopedIPCSupport> ipc_support_;
-};
-
-MojoThread::MojoThread() {
-  if (!::base::CurrentThread::IsSet()) {
-    (new brillo::BaseMessageLoop())->SetAsCurrent();
-  }
-  mojo::core::Init();
-  ipc_thread_ = std::make_unique<::base::Thread>("IpcThread");
-  ipc_thread_->StartWithOptions(
-      ::base::Thread::Options(::base::MessagePumpType::IO, 0));
-  ipc_support_ = std::make_unique<mojo::core::ScopedIPCSupport>(
-      ipc_thread_->task_runner(),
-      mojo::core::ScopedIPCSupport::ShutdownPolicy::CLEAN);
-}
-
-scoped_refptr<::base::SingleThreadTaskRunner>& MojoThread::GetIpcTaskRunner() {
-  static auto task_runner = ipc_thread_->task_runner();
-  return task_runner;
-}
-
-// static
-MojoThread& MojoThread::Get() {
-  static ::base::NoDestructor<MojoThread> kMojoThread;
-  return *kMojoThread;
-}
-
-MojoControllerCanonical::MojoControllerCanonical(const std::string service_name)
-    : service_name_(service_name) {
-  // We need to get task runner from MojoThread which also initializes mojo
-  // core, creates ipc thread, provides mojo ipc support, etc.
-  ipc_task_runner_ = MojoThread::Get().GetIpcTaskRunner();
-
+MojoControllerCanonical::MojoControllerCanonical(
+    scoped_refptr<::base::SequencedTaskRunner> task_runner,
+    const std::string service_name)
+    : task_runner_(task_runner), service_name_(service_name) {
   pid_t worker_pid;
   mojo::PlatformChannel channel;
   // Use unique ids to differentiate mojo message pipe names if there are
@@ -91,6 +42,13 @@ MojoControllerCanonical::MojoControllerCanonical(const std::string service_name)
       worker_pid, std::move(channel), pipe_name);
 }
 
+MojoControllerCanonical::~MojoControllerCanonical() {
+  // Move remote into ipc thread to be destroyed within the ipc thread
+  task_runner_->PostTask(
+      FROM_HERE, ::base::BindOnce([](mojo::Remote<mojom::IDevice> remote) {},
+                                  std::move(remote_)));
+}
+
 void MojoControllerCanonical::SendMojoInvitationAndGetRemote(
     pid_t child_pid,
     mojo::PlatformChannel channel,
@@ -98,19 +56,22 @@ void MojoControllerCanonical::SendMojoInvitationAndGetRemote(
   // Send the Mojo invitation to the worker process.
   mojo::OutgoingInvitation invitation;
   mojo::ScopedMessagePipeHandle pipe = invitation.AttachMessagePipe(pipe_name);
-
-  remote_ = mojo::Remote<canonical::mojom::IDevice>(
-      mojo::PendingRemote<canonical::mojom::IDevice>(std::move(pipe),
-                                                     0u /* version */));
-
   mojo::OutgoingInvitation::Send(std::move(invitation), child_pid,
                                  channel.TakeLocalEndpoint());
-  remote_.set_disconnect_handler(::base::BindOnce(
-      [](pid_t child) {
-        LOG(ERROR) << "remote_.disconnect_handler";
-        kill(child, SIGKILL);
-      },
-      child_pid));
+  remote_ = mojo::Remote<mojom::IDevice>(
+      mojo::PendingRemote<mojom::IDevice>(std::move(pipe), 0u /* version */),
+      task_runner_);
+  task_runner_->PostTask(
+      FROM_HERE, ::base::BindOnce(
+                     [](mojo::Remote<mojom::IDevice>& remote, pid_t child_pid) {
+                       remote.set_disconnect_handler(::base::BindOnce(
+                           [](pid_t child) {
+                             LOG(ERROR) << "remote_.disconnect_handler";
+                             kill(child, SIGKILL);
+                           },
+                           child_pid));
+                     },
+                     std::ref(remote_), child_pid));
 }
 
 bool MojoControllerCanonical::SpawnWorkerProcessAndGetPid(
@@ -194,57 +155,108 @@ bool MojoControllerCanonical::SpawnWorkerProcessAndGetPid(
 
 Capabilities MojoControllerCanonical::getCapabilities() {
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "MojoControllerCanonical::getCapabilities";
-  android::nn::Capabilities out_capabilities;
-  LOG_REMOTE_CALL_FAILURE(remote_->getCapabilities(&out_capabilities));
-  return out_capabilities;
+  Capabilities capabilities;
+  auto remote_call = [](mojo::Remote<mojom::IDevice>& remote,
+                        mojom::IDevice::getCapabilitiesCallback cb) {
+    remote->getCapabilities(std::move(cb));
+  };
+  auto callback = DefaultOutputCallback<Capabilities>;
+  LOG_REMOTE_CALL_FAILURE(
+      CallRemote(task_runner_, remote_, std::move(remote_call),
+                 std::move(callback), std::ref(capabilities)));
+  return capabilities;
 }
 
 std::string MojoControllerCanonical::getVersionString() {
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
       << "MojoControllerCanonical::getVersionString";
-  std::string out_version;
-  LOG_REMOTE_CALL_FAILURE(remote_->getVersionString(&out_version));
-  return out_version;
+  std::string version;
+  auto remote_call = [](mojo::Remote<mojom::IDevice>& remote,
+                        mojom::IDevice::getVersionStringCallback cb) {
+    remote->getVersionString(std::move(cb));
+  };
+  auto callback = FullOutputCallback<std::string, const std::string&>;
+  LOG_REMOTE_CALL_FAILURE(CallRemote(task_runner_, remote_,
+                                     std::move(remote_call),
+                                     std::move(callback), std::ref(version)));
+  return version;
 }
 
 Version MojoControllerCanonical::getFeatureLevel() {
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "MojoControllerCanonical::getFeatureLevel";
-  Version out_featureLevel;
-  LOG_REMOTE_CALL_FAILURE(remote_->getFeatureLevel(&out_featureLevel));
-  return out_featureLevel;
+  Version featureLevel;
+  auto remote_call = [](mojo::Remote<mojom::IDevice>& remote,
+                        mojom::IDevice::getFeatureLevelCallback cb) {
+    remote->getFeatureLevel(std::move(cb));
+  };
+  auto callback = DefaultOutputCallback<Version>;
+  LOG_REMOTE_CALL_FAILURE(
+      CallRemote(task_runner_, remote_, std::move(remote_call),
+                 std::move(callback), std::ref(featureLevel)));
+  return featureLevel;
 }
 
 DeviceType MojoControllerCanonical::getType() {
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "MojoControllerCanonical::getType";
-  DeviceType out_type;
-  LOG_REMOTE_CALL_FAILURE(remote_->getType(&out_type));
-  return out_type;
+  DeviceType type;
+  auto remote_call = [](mojo::Remote<mojom::IDevice>& remote,
+                        mojom::IDevice::getTypeCallback cb) {
+    remote->getType(std::move(cb));
+  };
+  auto callback = DefaultOutputCallback<DeviceType>;
+  LOG_REMOTE_CALL_FAILURE(CallRemote(task_runner_, remote_,
+                                     std::move(remote_call),
+                                     std::move(callback), std::ref(type)));
+  return type;
 }
 
 std::vector<Extension> MojoControllerCanonical::getSupportedExtensions() {
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
       << "MojoControllerCanonical::getSupportedExtensions";
-  std::vector<Extension> out_extensions;
-  LOG_REMOTE_CALL_FAILURE(remote_->getSupportedExtensions(&out_extensions));
-  return out_extensions;
+  std::vector<Extension> extensions;
+  auto remote_call = [](mojo::Remote<mojom::IDevice>& remote,
+                        mojom::IDevice::getSupportedExtensionsCallback cb) {
+    remote->getSupportedExtensions(std::move(cb));
+  };
+  auto callback =
+      FullOutputCallback<std::vector<Extension>, const std::vector<Extension>&>;
+
+  LOG_REMOTE_CALL_FAILURE(
+      CallRemote(task_runner_, remote_, std::move(remote_call),
+                 std::move(callback), std::ref(extensions)));
+  return extensions;
 }
 
 std::pair<uint32_t, uint32_t>
 MojoControllerCanonical::getNumberOfCacheFilesNeeded() {
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
       << "MojoControllerCanonical::getNumberOfCacheFilesNeeded";
-  uint32_t out_numModelCache;
-  uint32_t out_numDataCache;
-  LOG_REMOTE_CALL_FAILURE(remote_->getNumberOfCacheFilesNeeded(
-      &out_numModelCache, &out_numDataCache));
-  return std::pair<uint32_t, uint32_t>{out_numModelCache, out_numDataCache};
+  uint32_t numModelCache;
+  uint32_t numDataCache;
+  auto remote_call =
+      [](mojo::Remote<mojom::IDevice>& remote,
+         mojom::IDevice::getNumberOfCacheFilesNeededCallback cb) {
+        remote->getNumberOfCacheFilesNeeded(std::move(cb));
+      };
+  auto callback = DefaultOutputCallback<uint32_t, uint32_t>;
+  LOG_REMOTE_CALL_FAILURE(CallRemote(
+      task_runner_, remote_, std::move(remote_call), std::move(callback),
+      std::ref(numModelCache), std::ref(numDataCache)));
+  return std::pair<uint32_t, uint32_t>{numModelCache, numDataCache};
 }
 
 GeneralResult<void> MojoControllerCanonical::wait() {
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "MojoControllerCanonical::wait";
   GeneralError status;
-  HANDLE_REMOTE_CALL_FAILURE(remote_->wait(&status),
-                             ErrorStatus::DEVICE_UNAVAILABLE);
+  auto remote_call = [](mojo::Remote<mojom::IDevice>& remote,
+                        mojom::IDevice::waitCallback cb) {
+    remote->wait(std::move(cb));
+  };
+  auto callback = DefaultOutputCallback<GeneralError>;
+  HANDLE_REMOTE_CALL_FAILURE(
+      CallRemote(task_runner_, remote_, std::move(remote_call),
+                 std::move(callback), std::ref(status)),
+      ErrorStatus::DEVICE_UNAVAILABLE);
   return IS_OK(status.code) ? GeneralResult<void>{} : base::unexpected{status};
 }
 
@@ -253,14 +265,19 @@ MojoControllerCanonical::getSupportedOperations(const Model& model) {
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
       << "MojoControllerCanonical::getSupportedOperations";
   GeneralError status;
-  std::vector<bool> supportedOperations;
+  std::vector<bool> operations;
+  auto remote_call = [&](mojo::Remote<mojom::IDevice>& remote,
+                         mojom::IDevice::getSupportedOperationsCallback cb) {
+    remote->getSupportedOperations(model, std::move(cb));
+  };
+  auto callback = FullOutputCallback<GeneralError, std::vector<bool>,
+                                     GeneralError, const std::vector<bool>&>;
   HANDLE_REMOTE_CALL_FAILURE(
-      remote_->getSupportedOperations(model, &status, &supportedOperations),
+      CallRemote(task_runner_, remote_, std::move(remote_call),
+                 std::move(callback), std::ref(status), std::ref(operations)),
       ErrorStatus::DEVICE_UNAVAILABLE);
-  if (!IS_OK(status.code)) {
-    return base::unexpected{status};
-  }
-  return supportedOperations;
+  return IS_OK(status.code) ? GeneralResult<std::vector<bool>>{operations}
+                            : base::unexpected{status};
 }
 
 GeneralResult<SharedPreparedModel> MojoControllerCanonical::prepareModel(
@@ -275,19 +292,26 @@ GeneralResult<SharedPreparedModel> MojoControllerCanonical::prepareModel(
     const std::vector<nn::ExtensionNameAndPrefix>& extensionNameToPrefix) {
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "MojoControllerCanonical::prepareModel";
   GeneralError status;
-  ::mojo::PendingRemote<chromeos::nnapi::canonical::mojom::IPreparedModel>
-      out_preparedModel;
+  ::mojo::PendingRemote<mojom::IPreparedModel> preparedModel;
+  auto remote_call = [&](mojo::Remote<mojom::IDevice>& remote,
+                         mojom::IDevice::prepareModelCallback cb) {
+    remote->prepareModel(model, preference, priority, deadline, modelCache,
+                         dataCache, token, hints, extensionNameToPrefix,
+                         std::move(cb));
+  };
+  auto callback =
+      DefaultOutputCallback<GeneralError,
+                            ::mojo::PendingRemote<mojom::IPreparedModel>>;
   HANDLE_REMOTE_CALL_FAILURE(
-      remote_->prepareModel(model, preference, priority, deadline, modelCache,
-                            dataCache, token, hints, extensionNameToPrefix,
-                            &status, &out_preparedModel),
+      CallRemote(task_runner_, remote_, std::move(remote_call),
+                 std::move(callback), std::ref(status),
+                 std::ref(preparedModel)),
       ErrorStatus::DEVICE_UNAVAILABLE);
-  if (!IS_OK(status.code)) {
-    return base::unexpected{status};
-  }
-  std::shared_ptr<IPreparedModel> prepared_model_stub{
-      new android::nn::PreparedModelStub(std::move(out_preparedModel))};
-  return prepared_model_stub;
+  return IS_OK(status.code)
+             ? GeneralResult<
+                   SharedPreparedModel>{new android::nn::PreparedModelStub(
+                   std::move(preparedModel), task_runner_)}
+             : base::unexpected{status};
 }
 
 GeneralResult<SharedPreparedModel>
@@ -299,18 +323,25 @@ MojoControllerCanonical::prepareModelFromCache(
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
       << "MojoControllerCanonical::prepareModelFromCache";
   GeneralError status;
-  ::mojo::PendingRemote<chromeos::nnapi::canonical::mojom::IPreparedModel>
-      out_preparedModel;
+  ::mojo::PendingRemote<mojom::IPreparedModel> preparedModel;
+  auto remote_call = [&](mojo::Remote<mojom::IDevice>& remote,
+                         mojom::IDevice::prepareModelFromCacheCallback cb) {
+    remote->prepareModelFromCache(deadline, modelCache, dataCache, token,
+                                  std::move(cb));
+  };
+  auto callback =
+      DefaultOutputCallback<GeneralError,
+                            ::mojo::PendingRemote<mojom::IPreparedModel>>;
   HANDLE_REMOTE_CALL_FAILURE(
-      remote_->prepareModelFromCache(deadline, modelCache, dataCache, token,
-                                     &status, &out_preparedModel),
+      CallRemote(task_runner_, remote_, std::move(remote_call),
+                 std::move(callback), std::ref(status),
+                 std::ref(preparedModel)),
       ErrorStatus::DEVICE_UNAVAILABLE);
-  if (!IS_OK(status.code)) {
-    return base::unexpected{status};
-  }
-  std::shared_ptr<IPreparedModel> prepared_model_stub{
-      new android::nn::PreparedModelStub(std::move(out_preparedModel))};
-  return prepared_model_stub;
+  return IS_OK(status.code)
+             ? GeneralResult<
+                   SharedPreparedModel>{new android::nn::PreparedModelStub(
+                   std::move(preparedModel), task_runner_)}
+             : base::unexpected{status};
 }
 
 }  // namespace nn

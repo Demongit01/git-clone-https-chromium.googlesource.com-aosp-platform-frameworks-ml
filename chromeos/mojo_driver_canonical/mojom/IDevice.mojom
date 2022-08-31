@@ -11,23 +11,23 @@ import "aosp/frameworks/ml/chromeos/mojo_driver_canonical/mojom/Types.mojom";
 import "aosp/frameworks/ml/chromeos/mojo_driver_canonical/mojom/IPreparedModel.mojom";
 
 interface IDevice {
-  [Sync] getCapabilities() => (Capabilities capabilities);
-  [Sync] getVersionString() => (string version);
-  [Sync] getFeatureLevel() => (Version featureLevel);
-  [Sync] getType() => (DeviceType type);
-  [Sync] getSupportedExtensions() => (array<Extension> extensions);
-  [Sync] getNumberOfCacheFilesNeeded() => (uint32 numModelCache, uint32 numDataCache);
-  [Sync] wait() => (GeneralError status);
-  [Sync] getSupportedOperations(Model model)
+  getCapabilities() => (Capabilities capabilities);
+  getVersionString() => (string version);
+  getFeatureLevel() => (Version featureLevel);
+  getType() => (DeviceType type);
+  getSupportedExtensions() => (array<Extension> extensions);
+  getNumberOfCacheFilesNeeded() => (uint32 numModelCache, uint32 numDataCache);
+  wait() => (GeneralError status);
+  getSupportedOperations(Model model)
           => (GeneralError generalError, array<bool> supportedOperations);
-  [Sync] prepareModel(
+  prepareModel(
           Model model, ExecutionPreference preference, Priority priority,
           TimePoint? deadline, array<NnHandle> modelCache,
           array<NnHandle> dataCache, CacheToken token,
           array<TokenValuePair> hints,
           array<ExtensionNameAndPrefix> extensionNameToPrefix)
           => (GeneralError generalError, pending_remote<IPreparedModel>? preparedModel);
-  [Sync] prepareModelFromCache(
+  prepareModelFromCache(
           TimePoint? deadline, array<NnHandle> modelCache,
           array<NnHandle> dataCache, CacheToken token)
           => (GeneralError generalError, pending_remote<IPreparedModel>? preparedModel);

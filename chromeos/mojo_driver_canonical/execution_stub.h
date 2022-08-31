@@ -14,6 +14,7 @@
 #include "aosp/frameworks/ml/chromeos/mojo_driver_canonical/mojom/IExecution.mojom.h"
 #include "nnapi/IExecution.h"
 #include "nnapi/Types.h"
+#include "remote_call.h"
 
 // These classes are stub implementations of the NNAPI HAL
 // interfaces which wrap around a Mojo remote. They are needed
@@ -22,11 +23,15 @@
 namespace android {
 namespace nn {
 
-class ExecutionStub : public IExecution {
+class ExecutionStub
+    : public IExecution,
+      public HasRemote<chromeos::nnapi::canonical::mojom::IExecution> {
  public:
   ExecutionStub(
-      mojo::PendingRemote<chromeos::nnapi::canonical::mojom::IExecution> pm)
-      : pending_remote_(std::move(pm)) {}
+      mojo::PendingRemote<chromeos::nnapi::canonical::mojom::IExecution>
+          pending_remote,
+      scoped_refptr<::base::SequencedTaskRunner>& task_runner)
+      : HasRemote{std::move(pending_remote), task_runner} {};
 
   ExecutionResult<std::pair<std::vector<OutputShape>, Timing>> compute(
       const OptionalTimePoint& deadline) const override;
@@ -35,10 +40,6 @@ class ExecutionStub : public IExecution {
       const std::vector<SyncFence>& waitFor,
       const OptionalTimePoint& deadline,
       const OptionalDuration& timeoutDurationAfterFence) const override;
-
- private:
-  mutable mojo::PendingRemote<chromeos::nnapi::canonical::mojom::IExecution>
-      pending_remote_;
 };
 
 }  // namespace nn

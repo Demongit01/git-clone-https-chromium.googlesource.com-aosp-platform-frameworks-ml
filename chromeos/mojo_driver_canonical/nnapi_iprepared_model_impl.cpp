@@ -34,6 +34,7 @@ void IPreparedModelImpl::execute(
                               hints, extensionNameToPrefix);
   HANDLE_ERROR_RESULT(result, callback, {}, {});
   std::move(callback).Run(kExecutionErrorNone, result->first, result->second);
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "IPreparedModelImpl::execute finished";
 }
 
 void IPreparedModelImpl::executeFenced(
@@ -50,8 +51,14 @@ void IPreparedModelImpl::executeFenced(
   auto result = wrapped_model_->executeFenced(
       request, waitFor, measure, deadline, loopTimeoutDuration,
       timeoutDurationAfterFence, hints, extensionNameToPrefix);
-  HANDLE_ERROR_RESULT(result, callback, {}, {});
   mojo::PendingRemote<mojom::IExecuteFencedInfoCallback> pm_remote;
+  if (!result.ok()) {
+    mojo::MakeSelfOwnedReceiver(
+        std::make_unique<IExecuteFencedInfoCallbackImpl>(nullptr),
+        pm_remote.InitWithNewPipeAndPassReceiver());
+    std::move(callback).Run(result.error(), {}, std::move(pm_remote));
+    return;
+  }
   mojo::MakeSelfOwnedReceiver(
       std::make_unique<IExecuteFencedInfoCallbackImpl>(result.value().second),
       pm_remote.InitWithNewPipeAndPassReceiver());
@@ -75,11 +82,18 @@ void IPreparedModelImpl::createReusableExecution(
       << "IPreparedModelImpl::createReusableExecution";
   auto result = wrapped_model_->createReusableExecution(
       request, measure, loopTimeoutDuration, hints, extensionNameToPrefix);
-  HANDLE_ERROR_RESULT(result, callback, {});
   mojo::PendingRemote<mojom::IExecution> pm_remote;
+  if (!result.ok()) {
+    mojo::MakeSelfOwnedReceiver(std::make_unique<IExecutionImpl>(nullptr),
+                                pm_remote.InitWithNewPipeAndPassReceiver());
+    std::move(callback).Run(result.error(), std::move(pm_remote));
+    return;
+  }
   mojo::MakeSelfOwnedReceiver(std::make_unique<IExecutionImpl>(result.value()),
                               pm_remote.InitWithNewPipeAndPassReceiver());
   std::move(callback).Run(kGeneralErrorNone, std::move(pm_remote));
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
+      << "IPreparedModelImpl::createReusableExecution finished";
 }
 
 void IPreparedModelImpl::configureExecutionBurst(
@@ -87,11 +101,18 @@ void IPreparedModelImpl::configureExecutionBurst(
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
       << "IPreparedModelImpl::configureExecutionBurst";
   auto result = wrapped_model_->configureExecutionBurst();
-  HANDLE_ERROR_RESULT(result, callback, {});
   mojo::PendingRemote<mojom::IBurst> pm_remote;
+  if (!result.ok()) {
+    mojo::MakeSelfOwnedReceiver(std::make_unique<IBurstImpl>(nullptr),
+                                pm_remote.InitWithNewPipeAndPassReceiver());
+    std::move(callback).Run(result.error(), std::move(pm_remote));
+    return;
+  }
   mojo::MakeSelfOwnedReceiver(std::make_unique<IBurstImpl>(result.value()),
                               pm_remote.InitWithNewPipeAndPassReceiver());
   std::move(callback).Run(kGeneralErrorNone, std::move(pm_remote));
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
+      << "IPreparedModelImpl::configureExecutionBurst finished";
 }
 
 void IExecuteFencedInfoCallbackImpl::getExecuteFencedInfo(
@@ -101,6 +122,8 @@ void IExecuteFencedInfoCallbackImpl::getExecuteFencedInfo(
   auto result = wrapped_callback_();
   HANDLE_ERROR_RESULT(result, callback, {}, {});
   std::move(callback).Run(kGeneralErrorNone, result->first, result->second);
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
+      << "IExecuteFencedInfoCallbackImpl::getExecuteFencedInfo finished";
 }
 
 }  // namespace nn

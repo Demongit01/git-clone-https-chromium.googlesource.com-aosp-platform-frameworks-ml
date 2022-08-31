@@ -711,6 +711,7 @@ shared_library("mojo-driver-canonical") {
     "chromeos/mojo_driver_canonical/prepared_model_stub.cpp",
     "chromeos/mojo_driver_canonical/burst_stub.cpp",
     "chromeos/mojo_driver_canonical/execution_stub.cpp",
+    "chromeos/mojo_driver_canonical/callbacks_stub.cpp",
   ]
   libs = [
     "pthread",

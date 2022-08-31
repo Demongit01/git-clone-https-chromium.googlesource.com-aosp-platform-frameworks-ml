@@ -10,7 +10,7 @@ module chromeos.nnapi.canonical.mojom;
 import "aosp/frameworks/ml/chromeos/mojo_driver_canonical/mojom/Types.mojom";
 
 interface IBurst {
-  [Sync] execute(
+  execute(
           Request request, MeasureTiming measure, TimePoint? deadline,
           Duration? loopTimeoutDuration,
           array<TokenValuePair> hints,
