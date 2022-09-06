@@ -159,16 +159,24 @@ GeneralResult<SharedExecution> PreparedModelStub::createReusableExecution(
     const std::vector<ExtensionNameAndPrefix>& extensionNameToPrefix) const {
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
       << "PreparedModelStub::createReusableExecution";
+  std::optional<Request> maybeRequestInShared;
+  RequestRelocation relocation;
+  const Request& requestInShared = NN_TRY(convertRequestFromPointerToShared(
+      &request, kDefaultRequestMemoryAlignment, kDefaultRequestMemoryPadding,
+      &maybeRequestInShared, &relocation));
+  if (relocation.input) {
+    relocation.input->flush();
+  }
   GeneralError status;
   ::mojo::PendingRemote<mojom::IExecution> execution;
   auto remote_call =
-      [&request, &measure, &loopTimeoutDuration, &hints,
+      [&requestInShared, &measure, &loopTimeoutDuration, &hints,
        &extensionNameToPrefix](
           mojo::Remote<mojom::IPreparedModel>& remote,
           mojom::IPreparedModel::createReusableExecutionCallback cb) {
-        remote->createReusableExecution(request, measure, loopTimeoutDuration,
-                                        hints, extensionNameToPrefix,
-                                        std::move(cb));
+        remote->createReusableExecution(requestInShared, measure,
+                                        loopTimeoutDuration, hints,
+                                        extensionNameToPrefix, std::move(cb));
       };
   auto callback =
       DefaultOutputCallback<GeneralError,
@@ -177,6 +185,9 @@ GeneralResult<SharedExecution> PreparedModelStub::createReusableExecution(
       CallRemote(task_runner_, remote_, std::move(remote_call),
                  std::move(callback), std::ref(status), std::ref(execution)),
       ErrorStatus::DEVICE_UNAVAILABLE);
+  if (relocation.output) {
+    relocation.output->flush();
+  }
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
       << "PreparedModelStub::createReusableExecution finished.";
   return IS_OK(status.code) ? GeneralResult<SharedExecution>{new ExecutionStub(
