@@ -20,7 +20,7 @@ typedef void* (*get_driver_func)();
 std::unordered_map<std::string, std::string> driverToLibFallback = {
     {"default", "libfull-driver.so"},
     {"cros-default",
-     "libmojo-driver.so"}  // 'cros-default' is used in VTS tests
+     "libfull-driver.so"}  // 'cros-default' is used in VTS tests
 };
 std::unordered_map<std::string, std::string> driverToLib;
 std::string funcName = "get_driver";
