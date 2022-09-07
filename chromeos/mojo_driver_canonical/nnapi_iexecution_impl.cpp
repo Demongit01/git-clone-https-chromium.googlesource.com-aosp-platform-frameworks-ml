@@ -34,21 +34,17 @@ void IExecutionImpl::computeFenced(
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "IExecutionImpl::compute";
   auto result = wrapped_execution_->computeFenced(waitFor, deadline,
                                                   timeoutDurationAfterFence);
-  mojo::PendingRemote<mojom::IExecuteFencedInfoCallback> pm_remote;
-  if (!result.ok()) {
-    mojo::MakeSelfOwnedReceiver(
-        std::make_unique<IExecuteFencedInfoCallbackImpl>(nullptr),
-        pm_remote.InitWithNewPipeAndPassReceiver());
-    std::move(callback).Run(result.error(), {}, std::move(pm_remote));
-    return;
-  }
+  mojo::PendingRemote<mojom::IExecuteFencedInfoCallback> pending_remote;
   mojo::MakeSelfOwnedReceiver(
-      std::make_unique<IExecuteFencedInfoCallbackImpl>(result.value().second),
-      pm_remote.InitWithNewPipeAndPassReceiver());
+      std::make_unique<IExecuteFencedInfoCallbackImpl>(
+          result.ok() ? result.value().second : nullptr),
+      pending_remote.InitWithNewPipeAndPassReceiver());
   absl::optional<SyncFence> opt_fence =
-      result.value().first.hasFd() ? absl::make_optional(result.value().first)
-                                   : absl::nullopt;
-  std::move(callback).Run(kGeneralErrorNone, opt_fence, std::move(pm_remote));
+      result.ok() && result.value().first.hasFd()
+          ? absl::make_optional(result.value().first)
+          : absl::nullopt;
+  std::move(callback).Run(result.ok() ? kGeneralErrorNone : result.error(),
+                          opt_fence, std::move(pending_remote));
 }
 
 }  // namespace nn

@@ -51,7 +51,7 @@ class IPreparedModelImpl
       absl::optional<Duration> loopTimeoutDuration,
       const std::vector<TokenValuePair>& hints,
       const std::vector<ExtensionNameAndPrefix>& extensionNameToPrefix,
-      createReusableExecutionCallback callback);
+      createReusableExecutionCallback callback) override;
 
   void configureExecutionBurst(
       configureExecutionBurstCallback callback) override;

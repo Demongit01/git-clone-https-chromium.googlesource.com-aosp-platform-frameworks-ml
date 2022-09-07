@@ -8,6 +8,7 @@
 
 #include "handle_error_canonical.h"
 #include "logger.h"
+#include "nnapi_iexecution_impl.h"
 
 namespace android {
 namespace nn {
@@ -32,6 +33,26 @@ void IBurstImpl::execute(
                               hints, extensionNameToPrefix);
   HANDLE_ERROR_RESULT(result, callback, {}, {});
   std::move(callback).Run(kExecutionErrorNone, result->first, result->second);
+}
+
+void IBurstImpl::createReusableExecution(
+    Request request,
+    MeasureTiming measure,
+    absl::optional<Duration> loopTimeoutDuration,
+    const std::vector<TokenValuePair>& hints,
+    const std::vector<ExtensionNameAndPrefix>& extensionNameToPrefix,
+    createReusableExecutionCallback callback) {
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "IBurstImpl::createReusableExecution";
+  auto result = wrapped_burst_->createReusableExecution(
+      request, measure, loopTimeoutDuration, hints, extensionNameToPrefix);
+  mojo::PendingRemote<mojom::IExecution> pending_remote;
+  mojo::MakeSelfOwnedReceiver(
+      std::make_unique<IExecutionImpl>(result.ok() ? result.value() : nullptr),
+      pending_remote.InitWithNewPipeAndPassReceiver());
+  std::move(callback).Run(result.ok() ? kGeneralErrorNone : result.error(),
+                          std::move(pending_remote));
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
+      << "IBurstImpl::createReusableExecution finished";
 }
 
 }  // namespace nn

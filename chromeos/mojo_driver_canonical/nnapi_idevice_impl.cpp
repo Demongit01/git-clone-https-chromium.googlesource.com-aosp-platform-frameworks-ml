@@ -86,17 +86,12 @@ void IDeviceImpl::prepareModel(
   auto result = wrapped_driver_->prepareModel(
       model, preference, priority, deadline, modelCache, dataCache, token,
       hints, extensionNameToPrefix);
-  mojo::PendingRemote<mojom::IPreparedModel> pm_remote;
-  if (!result.ok()) {
-    mojo::MakeSelfOwnedReceiver(std::make_unique<IPreparedModelImpl>(nullptr),
-                                pm_remote.InitWithNewPipeAndPassReceiver());
-    std::move(callback).Run(result.error(), std::move(pm_remote));
-    return;
-  }
-  mojo::MakeSelfOwnedReceiver(
-      std::make_unique<IPreparedModelImpl>(result.value()),
-      pm_remote.InitWithNewPipeAndPassReceiver());
-  std::move(callback).Run(kGeneralErrorNone, std::move(pm_remote));
+  mojo::PendingRemote<mojom::IPreparedModel> pending_remote;
+  mojo::MakeSelfOwnedReceiver(std::make_unique<IPreparedModelImpl>(
+                                  result.ok() ? result.value() : nullptr),
+                              pending_remote.InitWithNewPipeAndPassReceiver());
+  std::move(callback).Run(result.ok() ? kGeneralErrorNone : result.error(),
+                          std::move(pending_remote));
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "IDeviceImpl::prepareModel finished";
 }
 
@@ -109,17 +104,12 @@ void IDeviceImpl::prepareModelFromCache(
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "IDeviceImpl::prepareModelFromCache";
   auto result = wrapped_driver_->prepareModelFromCache(deadline, modelCache,
                                                        dataCache, token);
-  mojo::PendingRemote<mojom::IPreparedModel> pm_remote;
-  if (!result.ok()) {
-    mojo::MakeSelfOwnedReceiver(std::make_unique<IPreparedModelImpl>(nullptr),
-                                pm_remote.InitWithNewPipeAndPassReceiver());
-    std::move(callback).Run(result.error(), std::move(pm_remote));
-    return;
-  }
-  mojo::MakeSelfOwnedReceiver(
-      std::make_unique<IPreparedModelImpl>(result.value()),
-      pm_remote.InitWithNewPipeAndPassReceiver());
-  std::move(callback).Run(kGeneralErrorNone, std::move(pm_remote));
+  mojo::PendingRemote<mojom::IPreparedModel> pending_remote;
+  mojo::MakeSelfOwnedReceiver(std::make_unique<IPreparedModelImpl>(
+                                  result.ok() ? result.value() : nullptr),
+                              pending_remote.InitWithNewPipeAndPassReceiver());
+  std::move(callback).Run(result.ok() ? kGeneralErrorNone : result.error(),
+                          std::move(pending_remote));
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "IDeviceImpl::prepareModelFromCache finished";
 }
 

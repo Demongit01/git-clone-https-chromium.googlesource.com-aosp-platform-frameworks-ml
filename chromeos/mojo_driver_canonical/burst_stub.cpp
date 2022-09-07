@@ -6,6 +6,7 @@
 
 #include <mojo/public/cpp/bindings/self_owned_receiver.h>
 
+#include "execution_stub.h"
 #include "handle_error_canonical.h"
 #include "logger.h"
 
@@ -84,7 +85,40 @@ GeneralResult<SharedExecution> BurstStub::createReusableExecution(
     const OptionalDuration& loopTimeoutDuration,
     const std::vector<TokenValuePair>& hints,
     const std::vector<ExtensionNameAndPrefix>& extensionNameToPrefix) const {
-  return NN_ERROR() << "IBurst::createReusableExecution is not supported!";
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL) << "BurstStub::createReusableExecution";
+  std::optional<Request> maybeRequestInShared;
+  RequestRelocation relocation;
+  const Request& requestInShared = NN_TRY(convertRequestFromPointerToShared(
+      &request, kDefaultRequestMemoryAlignment, kDefaultRequestMemoryPadding,
+      &maybeRequestInShared, &relocation));
+  if (relocation.input) {
+    relocation.input->flush();
+  }
+  GeneralError status;
+  ::mojo::PendingRemote<mojom::IExecution> execution;
+  auto remote_call = [&requestInShared, &measure, &loopTimeoutDuration, &hints,
+                      &extensionNameToPrefix](
+                         mojo::Remote<mojom::IBurst>& remote,
+                         mojom::IBurst::createReusableExecutionCallback cb) {
+    remote->createReusableExecution(requestInShared, measure,
+                                    loopTimeoutDuration, hints,
+                                    extensionNameToPrefix, std::move(cb));
+  };
+  auto callback =
+      DefaultOutputCallback<GeneralError,
+                            ::mojo::PendingRemote<mojom::IExecution>>;
+  HANDLE_REMOTE_CALL_FAILURE(
+      CallRemote(task_runner_, remote_, std::move(remote_call),
+                 std::move(callback), std::ref(status), std::ref(execution)),
+      ErrorStatus::DEVICE_UNAVAILABLE);
+  if (relocation.output) {
+    relocation.output->flush();
+  }
+  VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
+      << "BurstStub::createReusableExecution finished.";
+  return IS_OK(status.code) ? GeneralResult<SharedExecution>{new ExecutionStub(
+                                  std::move(execution), task_runner_)}
+                            : base::unexpected{status};
 }
 
 }  // namespace nn
