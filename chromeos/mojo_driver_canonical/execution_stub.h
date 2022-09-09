@@ -30,8 +30,10 @@ class ExecutionStub
   ExecutionStub(
       mojo::PendingRemote<chromeos::nnapi::canonical::mojom::IExecution>
           pending_remote,
-      scoped_refptr<::base::SequencedTaskRunner>& task_runner)
-      : HasRemote{std::move(pending_remote), task_runner} {};
+      scoped_refptr<::base::SequencedTaskRunner>& task_runner,
+      RequestRelocation relocation)
+      : HasRemote{std::move(pending_remote), task_runner},
+        relocation_(std::move(relocation)){};
 
   ExecutionResult<std::pair<std::vector<OutputShape>, Timing>> compute(
       const OptionalTimePoint& deadline) const override;
@@ -40,6 +42,9 @@ class ExecutionStub
       const std::vector<SyncFence>& waitFor,
       const OptionalTimePoint& deadline,
       const OptionalDuration& timeoutDurationAfterFence) const override;
+
+ private:
+  RequestRelocation relocation_;
 };
 
 }  // namespace nn

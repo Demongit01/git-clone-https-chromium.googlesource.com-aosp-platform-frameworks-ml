@@ -111,14 +111,12 @@ GeneralResult<SharedExecution> BurstStub::createReusableExecution(
       CallRemote(task_runner_, remote_, std::move(remote_call),
                  std::move(callback), std::ref(status), std::ref(execution)),
       ErrorStatus::DEVICE_UNAVAILABLE);
-  if (relocation.output) {
-    relocation.output->flush();
-  }
   VLOG(ML_NN_CHROMEOS_VLOG_LEVEL)
       << "BurstStub::createReusableExecution finished.";
-  return IS_OK(status.code) ? GeneralResult<SharedExecution>{new ExecutionStub(
-                                  std::move(execution), task_runner_)}
-                            : base::unexpected{status};
+  return IS_OK(status.code)
+             ? GeneralResult<SharedExecution>{new ExecutionStub(
+                   std::move(execution), task_runner_, std::move(relocation))}
+             : base::unexpected{status};
 }
 
 }  // namespace nn

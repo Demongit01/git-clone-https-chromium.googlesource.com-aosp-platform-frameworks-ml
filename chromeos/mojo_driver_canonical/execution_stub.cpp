@@ -33,6 +33,9 @@ ExecutionStub::compute(const OptionalTimePoint& deadline) const {
                  std::move(callback), std::ref(status), std::ref(outputShape),
                  std::ref(timing)),
       ErrorStatus::DEVICE_UNAVAILABLE);
+  if (relocation_.output) {
+    relocation_.output->flush();
+  }
   return IS_OK(status.code)
              ? ExecutionResult<
                    std::pair<std::vector<OutputShape>, Timing>>{{outputShape,
@@ -64,6 +67,9 @@ ExecutionStub::computeFenced(
                  std::move(callback), std::ref(status), std::ref(opt_fence),
                  std::ref(fenced_info)),
       ErrorStatus::DEVICE_UNAVAILABLE);
+  if (relocation_.output) {
+    relocation_.output->flush();
+  }
 
   if (!IS_OK(status.code)) {
     return base::unexpected{status};
