@@ -8,7 +8,7 @@
 module chromeos.nnapi.canonical.mojom;
 
 [Extensible] enum OperandType {
-  FLOAT32 = 0,
+  [Default] FLOAT32 = 0,
   INT32 = 1,
   UINT32 = 2,
   TENSOR_FLOAT32 = 3,
@@ -30,7 +30,7 @@ module chromeos.nnapi.canonical.mojom;
 
 
 [Extensible] enum VersionLevel {
-  FEATURE_LEVEL_1,
+  [Default] FEATURE_LEVEL_1,
   FEATURE_LEVEL_2,
   FEATURE_LEVEL_3,
   FEATURE_LEVEL_4,
@@ -42,7 +42,7 @@ module chromeos.nnapi.canonical.mojom;
 };
 
 [Extensible] enum DeviceType {
-  UNKNOWN = 0,
+  [Default] UNKNOWN = 0,
   OTHER = 1,
   CPU = 2,
   GPU = 3,
@@ -50,7 +50,7 @@ module chromeos.nnapi.canonical.mojom;
 };
 
 [Extensible] enum ErrorStatus {
-  NONE = 0,
+  [Default] NONE = 0,
   DEVICE_UNAVAILABLE = 1,
   GENERAL_FAILURE = 2,
   OUTPUT_INSUFFICIENT_SIZE = 3,
@@ -63,19 +63,19 @@ module chromeos.nnapi.canonical.mojom;
 };
 
 [Extensible] enum ExecutionPreference {
-  LOW_POWER = 0,
+  [Default] LOW_POWER = 0,
   FAST_SINGLE_ANSWER = 1,
   SUSTAINED_SPEED = 2,
 };
 
 [Extensible] enum Priority {
-  LOW,
+  [Default] LOW,
   MEDIUM,
   HIGH,
 };
 
 [Extensible] enum OperandLifeTime {
-  TEMPORARY_VARIABLE = 0,
+  [Default] TEMPORARY_VARIABLE = 0,
   SUBGRAPH_INPUT = 1,
   SUBGRAPH_OUTPUT = 2,
   CONSTANT_COPY = 3,
@@ -86,7 +86,7 @@ module chromeos.nnapi.canonical.mojom;
 };
 
 [Extensible] enum OperationType {
-    ADD = 0,
+    [Default] ADD = 0,
     AVERAGE_POOL_2D = 1,
     CONCATENATION = 2,
     CONV_2D = 3,
@@ -196,7 +196,7 @@ module chromeos.nnapi.canonical.mojom;
 };
 
 [Extensible] enum MeasureTiming {
-  NO = 0,
+  [Default] NO = 0,
   YES = 1,
 };
 
@@ -375,7 +375,7 @@ struct Duration {
 };
 
 [Extensible] enum RequestArgumentLifeTime {
-  POOL = 0,
+  [Default] POOL = 0,
   NO_VALUE = 1,
   POINTER = 2,
 };
