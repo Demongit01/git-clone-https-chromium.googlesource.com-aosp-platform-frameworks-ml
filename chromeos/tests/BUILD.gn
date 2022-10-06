@@ -1,4 +1,4 @@
-# Copyright 2020 The Chromium OS Authors. All rights reserved.
+# Copyright 2020 The ChromiumOS Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -20,6 +20,7 @@ group("vts") {
     ":cros_nnapi_vts_1_1",
     ":cros_nnapi_vts_1_2",
     ":cros_nnapi_vts_1_3",
+    ":cros_nnapi_vts_aidl",
   ]
 }
 
@@ -36,6 +37,7 @@ pkg_config("vts_defaults") {
     "${nn_src}/common/include/nnapi",
     "${nn_src}/common/types/include/nnapi",
     "${nn_src}/common/types/include",
+    "${nn_src}/driver/sample",
     "${nn_src}/runtime",
     "${nn_src}/runtime/include",
     "${nn_src}/tools/test_generator/test_harness/include",
@@ -44,6 +46,8 @@ pkg_config("vts_defaults") {
     "//aosp/hardware/interfaces/neuralnetworks/1.1/utils/include/",
     "//aosp/hardware/interfaces/neuralnetworks/1.2/utils/include/",
     "//aosp/hardware/interfaces/neuralnetworks/1.3/utils/include/",
+    "//aosp/hardware/interfaces/neuralnetworks/aidl/utils/include/",
+    "//aosp/hardware/interfaces/neuralnetworks/utils/adapter/aidl/include/",
     "//aosp/hardware/interfaces/neuralnetworks/utils/common/include/"
   ]
   pkg_deps = [
@@ -71,7 +75,10 @@ static_library("vts_common") {
     "${nn_src}:utils_1_1",
     "${nn_src}:utils_1_2",
     "${nn_src}:utils_1_3",
+    "${nn_src}:utils_aidl",
+    "${nn_src}:utils_adapter",
     "${nn_src}:vendor-nn-hal",
+    "${nn_src}:canonical-driver",
   ]
   include_dirs = [
     "${nn_src}/chromeos/config",
@@ -204,6 +211,41 @@ executable("cros_nnapi_vts_1_3") {
     "${vts_src}/1.3/vts/functional/ValidateModel.cpp",
     "${vts_src}/1.3/vts/functional/ValidateRequest.cpp",
     "${vts_src}/1.3/vts/functional/VtsHalNeuralnetworks.cpp",
+    "${nn_src}/chromeos/tests/runtime/generated_test_loader_V1_0.cc",
+    "${nn_src}/chromeos/tests/runtime/generated_test_loader_V1_1.cc",
+    "${nn_src}/chromeos/tests/runtime/generated_test_loader_V1_2.cc",
+    "${nn_src}/chromeos/tests/runtime/generated_test_loader_V1_3.cc",
+  ]
+}
+
+executable("cros_nnapi_vts_aidl") {
+  include_dirs = [
+    "${vts_src}/aidl/vts/functional",
+  ]
+  configs += [
+    ":vts_defaults",
+    "//aosp/frameworks/ml:target_defaults",
+  ]
+  deps = [
+    ":vts_common",
+    "${nn_src}:canonical-driver",
+    "${nn_src}/chromeos/tests/runtime/generated:generated_spec_v1_0",
+    "${nn_src}/chromeos/tests/runtime/generated:generated_spec_v1_1",
+    "${nn_src}/chromeos/tests/runtime/generated:generated_spec_v1_2",
+    "${nn_src}/chromeos/tests/runtime/generated:generated_spec_v1_3",
+  ]
+  sources = [
+    "${vts_src}/aidl/vts/functional/BasicTests.cpp",
+    "${vts_src}/aidl/vts/functional/Callbacks.cpp",
+    "${vts_src}/aidl/vts/functional/CompilationCachingTests.cpp",
+    "${vts_src}/aidl/vts/functional/GeneratedTestHarness.cpp",
+    "${vts_src}/aidl/vts/functional/MemoryDomainTests.cpp",
+    "${vts_src}/aidl/vts/functional/QualityOfServiceTests.cpp",
+    "${vts_src}/aidl/vts/functional/TestAssertions.cpp",
+    "${vts_src}/aidl/vts/functional/Utils.cpp",
+    "${vts_src}/aidl/vts/functional/ValidateModel.cpp",
+    "${vts_src}/aidl/vts/functional/ValidateRequest.cpp",
+    "${vts_src}/aidl/vts/functional/VtsHalNeuralnetworks.cpp",
     "${nn_src}/chromeos/tests/runtime/generated_test_loader_V1_0.cc",
     "${nn_src}/chromeos/tests/runtime/generated_test_loader_V1_1.cc",
     "${nn_src}/chromeos/tests/runtime/generated_test_loader_V1_2.cc",

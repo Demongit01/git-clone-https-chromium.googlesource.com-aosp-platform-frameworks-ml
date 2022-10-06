@@ -1,4 +1,4 @@
-# Copyright 2020 The Chromium OS Authors. All rights reserved.
+# Copyright 2020 The ChromiumOS Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -76,6 +76,7 @@ pkg_config("target_defaults") {
     "__ANDROID_API_S__=31",
     "__ANDROID_API_FUTURE__=10000",
     "NNAPI_CHROMEOS",
+    "NN_AIDL_V4_OR_ABOVE",
   ]
   if (use.test) {
     defines += [ "NN_DEBUGGABLE" ]
@@ -553,6 +554,37 @@ static_library("utils_1_3") {
   ]
 }
 
+static_library("utils_aidl") {
+  configs += [
+    ":common_defaults",
+    "//common-mk:pic",
+    "//common-mk:visibility_default",
+  ]
+  deps = [
+    ":utils_common",
+  ]
+  include_dirs = [
+    "//aosp/hardware/interfaces/neuralnetworks/aidl/utils/include",
+    "//aosp/hardware/interfaces/neuralnetworks/aidl/utils/include/nnapi/hal/aidl",
+  ]
+  sources = [
+    "//aosp/hardware/interfaces/neuralnetworks/aidl/utils/src/Assertions.cpp",
+    "//aosp/hardware/interfaces/neuralnetworks/aidl/utils/src/Buffer.cpp",
+    "//aosp/hardware/interfaces/neuralnetworks/aidl/utils/src/BufferTracker.cpp",
+    "//aosp/hardware/interfaces/neuralnetworks/aidl/utils/src/Burst.cpp",
+    "//aosp/hardware/interfaces/neuralnetworks/aidl/utils/src/Callbacks.cpp",
+    "//aosp/hardware/interfaces/neuralnetworks/aidl/utils/src/Conversions.cpp",
+    "//aosp/hardware/interfaces/neuralnetworks/aidl/utils/src/Device.cpp",
+    "//aosp/hardware/interfaces/neuralnetworks/aidl/utils/src/Execution.cpp",
+    "//aosp/hardware/interfaces/neuralnetworks/aidl/utils/src/HalUtils.cpp",
+    "//aosp/hardware/interfaces/neuralnetworks/aidl/utils/src/InvalidDevice.cpp",
+    "//aosp/hardware/interfaces/neuralnetworks/aidl/utils/src/PreparedModel.cpp",
+    "//aosp/hardware/interfaces/neuralnetworks/aidl/utils/src/ProtectCallback.cpp",
+    "//aosp/hardware/interfaces/neuralnetworks/aidl/utils/src/Utils.cpp",
+    "//aosp/hardware/interfaces/neuralnetworks/aidl/utils/src/ValidateHal.cpp",
+  ]
+}
+
 shared_library("vendor-nn-hal") {
   configs += [
     ":common_defaults",
@@ -648,6 +680,60 @@ shared_library("full-driver") {
   ]
   libs = [
     "pthread",
+  ]
+}
+
+shared_library("canonical-driver") {
+  configs += [
+    ":common_defaults",
+    "//common-mk:visibility_default",
+  ]
+  cflags_cc = [
+    "-Wno-unused-parameter",
+    "-Wno-unused-lambda-capture",
+    "-Wno-unused-function"
+  ]
+  deps = [
+    ":nn-common",
+  ]
+  include_dirs = [
+    "driver/sample",
+    "runtime/include",
+  ]
+  sources = [
+    "driver/sample/CanonicalBuffer.cpp",
+    "driver/sample/CanonicalBurst.cpp",
+    "driver/sample/CanonicalDevice.cpp",
+    "driver/sample/CanonicalPreparedModel.cpp",
+    "driver/sample/LimitedSupportDevice.cpp",
+    "driver/sample/SampleDriverSL.cpp",
+  ]
+  libs = [
+    "pthread",
+  ]
+}
+
+static_library("utils_adapter") {
+  configs += [
+    ":common_defaults",
+    "//common-mk:pic",
+    "//common-mk:visibility_default",
+  ]
+  deps = [
+    ":utils_common",
+  ]
+  include_dirs = [
+    "//aosp/hardware/interfaces/neuralnetworks/utils/adapter/aidl/include/nnapi/hal/aidl",
+    "//aosp/hardware/interfaces/neuralnetworks/utils/adapter/aidl/include",
+    "//aosp/hardware/interfaces/neuralnetworks/aidl/utils/include",
+    "//aosp/hardware/interfaces/neuralnetworks/aidl/utils/include/nnapi/hal/aidl",
+  ]
+  sources = [
+    "//aosp/hardware/interfaces/neuralnetworks/utils/adapter/aidl/src/Adapter.cpp",
+    "//aosp/hardware/interfaces/neuralnetworks/utils/adapter/aidl/src/Buffer.cpp",
+    "//aosp/hardware/interfaces/neuralnetworks/utils/adapter/aidl/src/Burst.cpp",
+    "//aosp/hardware/interfaces/neuralnetworks/utils/adapter/aidl/src/Device.cpp",
+    "//aosp/hardware/interfaces/neuralnetworks/utils/adapter/aidl/src/PreparedModel.cpp",
   ]
 }
 
