@@ -33,6 +33,7 @@ group("cts") {
 pkg_config("vts_defaults") {
   include_dirs = [
     "${vts_src}/1.0/vts/functional/include",
+    "${nn_src}/chromeos/driver_loader",
     "${nn_src}/common/include",
     "${nn_src}/common/include/nnapi",
     "${nn_src}/common/types/include/nnapi",
@@ -68,6 +69,7 @@ static_library("vts_common") {
     "-Wno-unused-parameter",
   ]
   deps = [
+    "${nn_src}:ipc-nn-hal",
     "${nn_src}:nn-common",
     "${nn_src}:runtime",
     "${nn_src}:utils_common",
@@ -78,7 +80,6 @@ static_library("vts_common") {
     "${nn_src}:utils_aidl",
     "${nn_src}:utils_adapter",
     "${nn_src}:vendor-nn-hal",
-    "${nn_src}:canonical-driver",
   ]
   include_dirs = [
     "${nn_src}/chromeos/config",
@@ -228,7 +229,6 @@ executable("cros_nnapi_vts_aidl") {
   ]
   deps = [
     ":vts_common",
-    "${nn_src}:canonical-driver",
     "${nn_src}/chromeos/tests/runtime/generated:generated_spec_v1_0",
     "${nn_src}/chromeos/tests/runtime/generated:generated_spec_v1_1",
     "${nn_src}/chromeos/tests/runtime/generated:generated_spec_v1_2",
