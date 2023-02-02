@@ -6,13 +6,13 @@
 #define ML_NN_CHROMEOS_NNAPI_HAL_IMPL_H_
 
 #include <HalInterfaces.h>
+#include <base/task/sequenced_task_runner.h>
+#include <base/task/task_runner.h>
 #include <mojo/public/cpp/bindings/pending_receiver.h>
 #include <mojo/public/cpp/bindings/receiver.h>
 #include <mojo/public/cpp/bindings/receiver_set.h>
 #include <nnapi/hal/1.0/Device.h>
 #include <nnapi/hal/1.3/Device.h>
-
-#include <base/task/task_runner.h>
 
 #include "aosp/frameworks/ml/chromeos/mojo_driver/mojom/nnapi_hal.mojom.h"
 
@@ -193,7 +193,7 @@ class IPreparedModel_1_3Impl
  public:
   IPreparedModel_1_3Impl(sp<V1_3::IPreparedModel> preparedModel)
       : wrapped_model_(preparedModel), prepared_model_1_2_impl_{preparedModel} {
-    task_runner_ = ::base::SequencedTaskRunnerHandle::Get();
+      task_runner_ = ::base::SequencedTaskRunner::GetCurrentDefault();
   }
 
   void execute(V1_0::Request request,

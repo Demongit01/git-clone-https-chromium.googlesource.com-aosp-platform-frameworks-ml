@@ -6,6 +6,7 @@
 #define ML_NN_CHROMEOS_NNAPI_WRAPPERS_H_
 
 #include <base/memory/weak_ptr.h>
+#include <base/task/sequenced_task_runner.h>
 
 #include "nnapi_hal_impl.h"
 
@@ -18,8 +19,7 @@ namespace nn {
 
 class HasSequencedTaskRunner {
  public:
-  HasSequencedTaskRunner()
-      : task_runner_{::base::SequencedTaskRunnerHandle::Get()} {}
+  HasSequencedTaskRunner() : task_runner_{::base::SequencedTaskRunner::GetCurrentDefault()} {}
 
  protected:
   scoped_refptr<::base::SequencedTaskRunner> task_runner_;

@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <base/task/single_thread_task_runner.h>
 #include <base/threading/thread.h>
 #include <brillo/message_loops/base_message_loop.h>
 #include <mojo/core/embedder/embedder.h>
@@ -9,7 +10,6 @@
 #include <mojo/public/cpp/bindings/remote.h>
 #include <mojo/public/cpp/platform/platform_channel.h>
 #include <mojo/public/cpp/system/invitation.h>
-
 #include <nnapi/IDevice.h>
 
 #include "aosp/frameworks/ml/chromeos/mojo_driver_canonical/mojom/IDevice.mojom.h"
@@ -31,9 +31,8 @@ void nnapi_worker_process(int mojo_bootstrap_fd,
   brillo::BaseMessageLoop message_loop;
   message_loop.SetAsCurrent();
   mojo::core::Init();
-  mojo::core::ScopedIPCSupport ipc_support(
-      base::ThreadTaskRunnerHandle::Get(),
-      mojo::core::ScopedIPCSupport::ShutdownPolicy::FAST);
+  mojo::core::ScopedIPCSupport ipc_support(base::SingleThreadTaskRunner::GetCurrentDefault(),
+                                           mojo::core::ScopedIPCSupport::ShutdownPolicy::FAST);
 
   mojo::IncomingInvitation invitation;
   invitation = mojo::IncomingInvitation::Accept(mojo::PlatformChannelEndpoint(
