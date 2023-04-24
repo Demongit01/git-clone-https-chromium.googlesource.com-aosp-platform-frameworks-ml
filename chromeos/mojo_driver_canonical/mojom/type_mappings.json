@@ -8,6 +8,7 @@
         "types_traits.h"
       ],
       "copyable_pass_by_value": true,
+      "default_constructible": true,
       "force_serialize": false,
       "move_only": false,
       "nullable_is_same_type": false,
@@ -24,6 +25,7 @@
         "types_traits.h"
       ],
       "copyable_pass_by_value": true,
+      "default_constructible": true,
       "force_serialize": false,
       "move_only": false,
       "nullable_is_same_type": false,
@@ -40,6 +42,7 @@
         "types_traits.h"
       ],
       "copyable_pass_by_value": true,
+      "default_constructible": true,
       "force_serialize": false,
       "move_only": false,
       "nullable_is_same_type": false,
@@ -56,6 +59,7 @@
         "types_traits.h"
       ],
       "copyable_pass_by_value": true,
+      "default_constructible": true,
       "force_serialize": false,
       "move_only": false,
       "nullable_is_same_type": false,
@@ -72,6 +76,7 @@
         "types_traits.h"
       ],
       "copyable_pass_by_value": true,
+      "default_constructible": true,
       "force_serialize": false,
       "move_only": false,
       "nullable_is_same_type": false,
@@ -88,6 +93,7 @@
         "types_traits.h"
       ],
       "copyable_pass_by_value": true,
+      "default_constructible": true,
       "force_serialize": false,
       "move_only": false,
       "nullable_is_same_type": false,
@@ -104,6 +110,7 @@
         "types_traits.h"
       ],
       "copyable_pass_by_value": true,
+      "default_constructible": true,
       "force_serialize": false,
       "move_only": false,
       "nullable_is_same_type": false,
@@ -120,6 +127,7 @@
         "types_traits.h"
       ],
       "copyable_pass_by_value": true,
+      "default_constructible": true,
       "force_serialize": false,
       "move_only": false,
       "nullable_is_same_type": false,
@@ -136,6 +144,7 @@
         "types_traits.h"
       ],
       "copyable_pass_by_value": true,
+      "default_constructible": true,
       "force_serialize": false,
       "move_only": false,
       "nullable_is_same_type": false,
@@ -152,6 +161,7 @@
         "types_traits.h"
       ],
       "copyable_pass_by_value": true,
+      "default_constructible": true,
       "force_serialize": false,
       "move_only": false,
       "nullable_is_same_type": false,
@@ -168,6 +178,7 @@
         "types_traits.h"
       ],
       "copyable_pass_by_value": true,
+      "default_constructible": true,
       "force_serialize": false,
       "move_only": false,
       "nullable_is_same_type": false,
@@ -184,6 +195,7 @@
         "types_traits.h"
       ],
       "copyable_pass_by_value": true,
+      "default_constructible": true,
       "force_serialize": false,
       "move_only": false,
       "nullable_is_same_type": false,
@@ -200,6 +212,7 @@
         "types_traits.h"
       ],
       "copyable_pass_by_value": true,
+      "default_constructible": true,
       "force_serialize": false,
       "move_only": false,
       "nullable_is_same_type": false,
@@ -216,6 +229,7 @@
         "types_traits.h"
       ],
       "copyable_pass_by_value": true,
+      "default_constructible": true,
       "force_serialize": false,
       "move_only": false,
       "nullable_is_same_type": false,
@@ -234,6 +248,7 @@
         "types_traits.h"
       ],
       "copyable_pass_by_value": true,
+      "default_constructible": true,
       "force_serialize": false,
       "move_only": false,
       "nullable_is_same_type": false,
@@ -252,6 +267,7 @@
         "types_traits.h"
       ],
       "copyable_pass_by_value": true,
+      "default_constructible": true,
       "force_serialize": false,
       "move_only": false,
       "nullable_is_same_type": false,
@@ -270,6 +286,7 @@
         "types_traits.h"
       ],
       "copyable_pass_by_value": true,
+      "default_constructible": true,
       "force_serialize": false,
       "move_only": false,
       "nullable_is_same_type": false,
@@ -288,6 +305,7 @@
         "types_traits.h"
       ],
       "copyable_pass_by_value": true,
+      "default_constructible": true,
       "force_serialize": false,
       "move_only": false,
       "nullable_is_same_type": false,
@@ -306,6 +324,7 @@
         "types_traits.h"
       ],
       "copyable_pass_by_value": true,
+      "default_constructible": true,
       "force_serialize": false,
       "move_only": false,
       "nullable_is_same_type": false,
@@ -324,6 +343,7 @@
         "types_traits.h"
       ],
       "copyable_pass_by_value": false,
+      "default_constructible": true,
       "force_serialize": false,
       "move_only": true,
       "nullable_is_same_type": false,
