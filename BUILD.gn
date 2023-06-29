@@ -61,6 +61,8 @@ pkg_config("target_defaults") {
     "-Wno-inconsistent-missing-override",
     # gemmlowp library has many signed with unsigned compares.
     "-Wno-sign-compare",
+    # TODO(crbug.com/1082873): Remove use of deprecated protocol buffers.
+    "-Wno-deprecated-declarations",
   ]
   ldflags = [
     "-Wl,--no-as-needed",
